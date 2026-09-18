@@ -24,7 +24,7 @@ gem "thruster", require: false
 # reading ANY jsonb column raises ArgumentError. Bundler resolves json 3.0.2 by
 # default because nothing else constrains it. Remove this pin once Rails
 # declares support for json 3.
-gem "json", "~> 2.7"
+gem "json", "~> 3.0"
 
 gem "image_processing", "~> 1.2"
 # Loaded lazily: image_processing only needs the Vips constant when a variant is
