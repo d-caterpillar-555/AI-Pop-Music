@@ -26,7 +26,7 @@ gem "thruster", require: false
 # declares support for json 3.
 gem "json", "~> 2.7"
 
-gem "image_processing", "~> 1.2"
+gem "image_processing", "~> 2.1"
 # Loaded lazily: image_processing only needs the Vips constant when a variant is
 # actually processed. Requiring it at boot would make the whole application
 # depend on a system libvips being present just to start.
