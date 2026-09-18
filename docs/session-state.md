@@ -15,7 +15,7 @@ motion studies. Everything below is committed and pushed to
 | Run | `bin/pg start` (Postgres 18 on **5434**), then `mise exec -- bin/dev`, or `bin/rails server -p 5000 -b 0.0.0.0` |
 | Ruby | 3.4.10 via `mise`, never the system 3.3.8 |
 | Seed logins | `admin@` / `editor@` / `member@example.com`, password `password1234` |
-| Blender | **Not usable.** Store package data exists at `AppData\Local\Packages\BlenderFoundation.Blender_ppwjx1n5r4v9t` but the binary is in the ACL-protected `WindowsApps` store, with no PATH alias and no Start-menu entry. Do not plan around it. |
+| Blender | **Works.** Portable build at `D:\Program Apps\Blender\blender-4.5.9-windows-x64\blender.exe` (4.5.9 LTS). Headless: `& "<that path>" --background --python <script>.py`. The Store package is a dead end — its binary sits in the ACL-protected `WindowsApps` store with no PATH alias and no Start-menu entry; ignore it. |
 | Screenshots | **agent-browser silently fails when the output path contains a space** — it prints "saved" and writes nothing. Stage to `D:\apm-shots\`, then `Copy-Item` into `D:\Program Apps\AI Pop Music\Screenshots\`. |
 | Restart after adding pins | Adding a `pin_all_from` directory to `config/importmap.rb` requires a **server restart**; otherwise controllers fail with "Failed to fetch dynamically imported module". |
 | Kill the server carefully | `pkill -f puma` killed the shell running it. Prefer `kill_shell` with the task id. |
