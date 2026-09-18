@@ -5,7 +5,7 @@
   <p class="measure mt-3 text-ink-600">Notes on the catalogue, licensing and how the songs are made.</p>
 
   <% if @posts.any? %>
-    <ul class="mt-10 divide-y divide-paper-100 border-y border-paper-100">
+    <ul class="mt-10 divide-y divide-ink-700 border-y border-ink-700">
       <% @posts.each do |post| %>
         <li class="py-6">
           <p class="meta"><%= post.published_at.strftime("%-d %b %Y") %></p>

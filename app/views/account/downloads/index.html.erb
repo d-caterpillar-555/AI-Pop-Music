@@ -12,7 +12,7 @@
     <div class="mt-8 overflow-x-auto">
       <table class="w-full text-sm">
         <thead>
-          <tr class="border-b border-paper-100 text-left">
+          <tr class="border-b border-ink-700 text-left">
             <th scope="col" class="py-3 pr-4 font-medium">Track</th>
             <th scope="col" class="py-3 pr-4 font-medium">Genre</th>
             <th scope="col" class="py-3 pr-4 font-medium">Licence version</th>
@@ -21,7 +21,7 @@
         </thead>
         <tbody>
           <% @downloads.each do |download| %>
-            <tr class="border-b border-paper-100">
+            <tr class="border-b border-ink-700">
               <td class="py-3 pr-4">
                 <%= link_to download.track.title, track_path(download.track), class: "hover:underline" %>
               </td>

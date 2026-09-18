@@ -29,7 +29,7 @@
       </p>
 
       <% if @entitlements.any? %>
-        <ul class="mt-4 divide-y divide-paper-100 border-y border-paper-100">
+        <ul class="mt-4 divide-y divide-ink-700 border-y border-ink-700">
           <% @entitlements.each do |entitlement| %>
             <li class="flex items-center justify-between gap-4 py-3">
               <span><%= link_to entitlement.genre.name, genre_path(entitlement.genre), class: "hover:underline" %></span>
@@ -48,7 +48,7 @@
       <p class="meta mt-1"><%= pluralize(@subscription.remaining_genre_slots, "slot") %> remaining</p>
 
       <% if @available_genres.any? %>
-        <ul class="mt-4 divide-y divide-paper-100 border-y border-paper-100">
+        <ul class="mt-4 divide-y divide-ink-700 border-y border-ink-700">
           <% @available_genres.each do |genre| %>
             <li class="flex items-center justify-between gap-4 py-3">
               <span>
@@ -67,9 +67,9 @@
     </section>
   </div>
 
-  <div class="mt-12 border-t border-paper-100 pt-6">
+  <div class="mt-12 border-t border-ink-700 pt-6">
     <h2 class="text-xl">Billing history</h2>
-    <ul class="mt-4 divide-y divide-paper-100 border-y border-paper-100">
+    <ul class="mt-4 divide-y divide-ink-700 border-y border-ink-700">
       <% events = @subscription.subscription_events.order(occurred_at: :desc) %>
       <% if events.any? %>
         <% events.each do |event| %>

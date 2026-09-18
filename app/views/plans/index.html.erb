@@ -20,11 +20,11 @@
       <caption class="sr-only">Comparison of AI Pop Music subscription plans</caption>
       <thead>
         <tr>
-          <th scope="col" class="border-b border-paper-100 py-4 pr-4 text-left align-bottom">
+          <th scope="col" class="border-b border-ink-700 py-4 pr-4 text-left align-bottom">
             <span class="meta uppercase">Compare</span>
           </th>
           <% @plans.each do |plan| %>
-            <th scope="col" class="border-b border-paper-100 p-4 text-left align-bottom <%= "bg-paper-100" if plan.slug == "pro" %>">
+            <th scope="col" class="border-b border-ink-700 p-4 text-left align-bottom <%= "bg-ink-950" if plan.slug == "pro" %>">
               <% if plan.slug == "pro" %>
                 <span class="chip chip-ok">Recommended start</span>
               <% end %>
@@ -39,49 +39,49 @@
       </thead>
       <tbody>
         <tr>
-          <th scope="row" class="border-b border-paper-100 py-3 pr-4 text-left font-normal text-ink-600">Genres covered</th>
+          <th scope="row" class="border-b border-ink-700 py-3 pr-4 text-left font-normal text-ink-600">Genres covered</th>
           <% @plans.each do |plan| %>
-            <td class="border-b border-paper-100 p-4 <%= "bg-paper-100" if plan.slug == "pro" %>">
+            <td class="border-b border-ink-700 p-4 <%= "bg-ink-950" if plan.slug == "pro" %>">
               <%= pluralize(plan.genre_limit, "genre") %>
             </td>
           <% end %>
         </tr>
         <tr>
-          <th scope="row" class="border-b border-paper-100 py-3 pr-4 text-left font-normal text-ink-600">Downloads inside them</th>
+          <th scope="row" class="border-b border-ink-700 py-3 pr-4 text-left font-normal text-ink-600">Downloads inside them</th>
           <% @plans.each do |plan| %>
-            <td class="border-b border-paper-100 p-4 <%= "bg-paper-100" if plan.slug == "pro" %>">Unlimited</td>
+            <td class="border-b border-ink-700 p-4 <%= "bg-ink-950" if plan.slug == "pro" %>">Unlimited</td>
           <% end %>
         </tr>
         <tr>
-          <th scope="row" class="border-b border-paper-100 py-3 pr-4 text-left font-normal text-ink-600">Master format</th>
+          <th scope="row" class="border-b border-ink-700 py-3 pr-4 text-left font-normal text-ink-600">Master format</th>
           <% @plans.each do |plan| %>
-            <td class="border-b border-paper-100 p-4 <%= "bg-paper-100" if plan.slug == "pro" %>">48 kHz stereo FLAC</td>
+            <td class="border-b border-ink-700 p-4 <%= "bg-ink-950" if plan.slug == "pro" %>">48 kHz stereo FLAC</td>
           <% end %>
         </tr>
         <tr>
-          <th scope="row" class="border-b border-paper-100 py-3 pr-4 text-left font-normal text-ink-600">Commercial licence</th>
+          <th scope="row" class="border-b border-ink-700 py-3 pr-4 text-left font-normal text-ink-600">Commercial licence</th>
           <% @plans.each do |plan| %>
-            <td class="border-b border-paper-100 p-4 <%= "bg-paper-100" if plan.slug == "pro" %>">
+            <td class="border-b border-ink-700 p-4 <%= "bg-ink-950" if plan.slug == "pro" %>">
               Yes, recorded per download
             </td>
           <% end %>
         </tr>
         <tr>
-          <th scope="row" class="border-b border-paper-100 py-3 pr-4 text-left font-normal text-ink-600">Attribution required</th>
+          <th scope="row" class="border-b border-ink-700 py-3 pr-4 text-left font-normal text-ink-600">Attribution required</th>
           <% @plans.each do |plan| %>
-            <td class="border-b border-paper-100 p-4 <%= "bg-paper-100" if plan.slug == "pro" %>">No</td>
+            <td class="border-b border-ink-700 p-4 <%= "bg-ink-950" if plan.slug == "pro" %>">No</td>
           <% end %>
         </tr>
         <tr>
           <th scope="row" class="py-3 pr-4 text-left font-normal text-ink-600">Cancel</th>
           <% @plans.each do |plan| %>
-            <td class="p-4 <%= "bg-paper-100" if plan.slug == "pro" %>">Any time</td>
+            <td class="p-4 <%= "bg-ink-950" if plan.slug == "pro" %>">Any time</td>
           <% end %>
         </tr>
         <tr>
           <td class="pt-6 pr-4"></td>
           <% @plans.each do |plan| %>
-            <td class="p-4 pt-6 <%= "bg-paper-100" if plan.slug == "pro" %>">
+            <td class="p-4 pt-6 <%= "bg-ink-950" if plan.slug == "pro" %>">
               <%= link_to "Choose #{plan.name}", subscribe_path(plan_slug: plan.slug),
                 class: "btn #{plan.slug == "pro" ? "btn-primary" : "btn-secondary"} w-full" %>
             </td>
@@ -154,7 +154,7 @@
 
 <section class="wrap mt-16">
   <h2 class="text-2xl">Pricing questions</h2>
-  <dl class="measure mt-6 divide-y divide-paper-100 border-y border-paper-100">
+  <dl class="measure mt-6 divide-y divide-ink-700 border-y border-ink-700">
     <% faqs.each do |question, answer| %>
       <div class="py-5">
         <dt class="font-display text-lg"><%= question %></dt>
