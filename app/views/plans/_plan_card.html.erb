@@ -1,0 +1,32 @@
+<li class="card flex flex-col p-6 <%= "border-ink-600" if plan.slug == "pro" %>">
+  <% if plan.slug == "pro" %>
+    <p class="chip chip-ok self-start">Recommended start</p>
+  <% end %>
+  <p class="mt-2 font-display text-2xl"><%= plan.name %></p>
+
+  <p class="mt-3">
+    <span class="font-display text-4xl"><%= formatted_price(plan.price_cents, plan.currency) %></span>
+    <span class="meta"><%= plan.billed_as %></span>
+  </p>
+
+  <p class="mt-4 text-sm text-ink-600">
+    Covers <strong><%= pluralize(plan.genre_limit, "genre") %></strong> of your choosing,
+    with unlimited downloads inside them.
+  </p>
+
+  <% if plan.features.present? %>
+    <ul class="mt-4 space-y-2 text-sm text-ink-600">
+      <% Array(plan.features["includes"]).each do |line| %>
+        <li><%= line %></li>
+      <% end %>
+    </ul>
+  <% end %>
+
+  <div class="mt-6 flex-1"></div>
+
+  <%= link_to "Choose #{plan.name}", subscribe_path(plan_slug: plan.slug),
+    class: "btn #{plan.slug == "pro" ? "btn-primary" : "btn-secondary"} w-full" %>
+  <p class="meta mt-3">
+    <%= link_to "What the licence covers", page_license_path, class: "underline" %>
+  </p>
+</li>

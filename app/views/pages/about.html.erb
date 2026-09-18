@@ -1,0 +1,46 @@
+<% page_title "About" %>
+
+<article class="wrap measure">
+  <h1 class="text-4xl">About AI Pop Music</h1>
+
+  <p class="mt-6 text-lg text-ink-600">
+    A small catalogue of original songs, made with AI, licensed to people who need music
+    they are allowed to use.
+  </p>
+
+  <div class="mt-10 space-y-6 text-ink-600">
+    <section>
+      <h2 class="text-2xl text-ink-950">What we sell</h2>
+      <p class="mt-2">
+        A subscription to genres. Each month you cover a number of genres, download as many
+        tracks from them as you like, and keep a licence record for every file.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="text-2xl text-ink-950">What we do not do</h2>
+      <p class="mt-2">
+        We do not claim to replace a composer, and we do not pretend a generated song was
+        written by a person. We do not sell you a licence we cannot back: every track in the
+        catalogue was generated on hardware we operate, and its provenance is recorded with it.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="text-2xl text-ink-950">How the songs are made</h2>
+      <p class="mt-2">
+        Tracks are generated with YuE2, an open music-generation model, running on our own GPU
+        through ComfyUI. A generation produces the audio, a symbolic score, and the metadata
+        you see on the track page. An editor listens before anything is published.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="text-2xl text-ink-950">Contact</h2>
+      <p class="mt-2">
+        <%= link_to "Get in touch", page_contact_path, class: "underline" %> for licensing
+        questions, custom work, or anything else.
+      </p>
+    </section>
+  </div>
+</article>

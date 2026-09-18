@@ -1,0 +1,41 @@
+<% page_title "Downloads" %>
+
+<section class="wrap">
+  <p class="meta uppercase"><%= link_to "Account", account_root_path, class: "underline" %></p>
+  <h1 class="mt-3 text-3xl">Downloads</h1>
+  <p class="measure mt-3 text-ink-600">
+    Every download is recorded with the licence version in force at the time. Keep this page
+    as your evidence of licence.
+  </p>
+
+  <% if @downloads.any? %>
+    <div class="mt-8 overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-paper-100 text-left">
+            <th scope="col" class="py-3 pr-4 font-medium">Track</th>
+            <th scope="col" class="py-3 pr-4 font-medium">Genre</th>
+            <th scope="col" class="py-3 pr-4 font-medium">Licence version</th>
+            <th scope="col" class="py-3 font-medium">Downloaded</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @downloads.each do |download| %>
+            <tr class="border-b border-paper-100">
+              <td class="py-3 pr-4">
+                <%= link_to download.track.title, track_path(download.track), class: "hover:underline" %>
+              </td>
+              <td class="py-3 pr-4 text-ink-600"><%= download.track.genre.name %></td>
+              <td class="meta py-3 pr-4"><%= download.license_terms_version %></td>
+              <td class="py-3 text-ink-600"><%= download.created_at.strftime("%-d %b %Y") %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <p class="mt-8 text-ink-600">
+      No downloads yet. <%= link_to "Browse genres", genres_path, class: "underline" %> to find something.
+    </p>
+  <% end %>
+</section>

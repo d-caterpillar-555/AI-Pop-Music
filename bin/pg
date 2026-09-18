@@ -1,0 +1,133 @@
+#!/usr/bin/env bash
+#
+# Project-local PostgreSQL control script.
+#
+# Runs a PostgreSQL cluster owned by the current user, entirely inside the
+# project at .postgres/. This exists because the machine's system PostgreSQL
+# cluster requires sudo to create a role, and because keeping the database
+# project-local means no global state is touched.
+#
+# Usage:
+#   bin/pg start | stop | restart | status | psql | setup | destroy
+#
+# The development port is 5434, not the 5433 the sibling storefront project
+# uses, so the two project-local clusters can run side by side.
+#
+set -euo pipefail
+
+PGBIN="${PGBIN:-/usr/lib/postgresql/18/bin}"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/.postgres"
+DATA="$ROOT/data"
+RUN="$ROOT/run"
+LOG="$ROOT/postgres.log"
+PORT="${PGPORT:-5434}"
+
+export PGDATA="$DATA"
+export PGPORT="$PORT"
+
+require_binaries() {
+  for bin in initdb pg_ctl pg_isready psql createdb; do
+    if [ ! -x "$PGBIN/$bin" ]; then
+      echo "Missing $PGBIN/$bin. Install postgresql-18 or set PGBIN." >&2
+      exit 1
+    fi
+  done
+}
+
+initialise() {
+  mkdir -p "$DATA" "$RUN"
+  chmod 700 "$DATA"
+
+  if [ -f "$DATA/PG_VERSION" ]; then
+    return
+  fi
+
+  echo "Initialising cluster at $DATA"
+  "$PGBIN/initdb" \
+    --pgdata="$DATA" \
+    --username=ai_pop_music \
+    --auth-local=trust \
+    --auth-host=trust \
+    --encoding=UTF8 \
+    --locale=C.UTF-8 >/dev/null
+
+  cat >>"$DATA/postgresql.conf" <<CONF
+
+# --- ai-pop-music project-local overrides ---
+listen_addresses = '127.0.0.1'
+port = $PORT
+unix_socket_directories = '$RUN'
+CONF
+}
+
+start() {
+  initialise
+
+  if "$PGBIN/pg_ctl" --pgdata="$DATA" status >/dev/null 2>&1; then
+    echo "Already running on port $PORT"
+    return
+  fi
+
+  "$PGBIN/pg_ctl" \
+    --pgdata="$DATA" \
+    --log="$LOG" \
+    --options="-p $PORT -k $RUN" \
+    --wait \
+    start
+
+  echo "Listening on 127.0.0.1:$PORT (log: $LOG)"
+}
+
+stop() {
+  if "$PGBIN/pg_ctl" --pgdata="$DATA" status >/dev/null 2>&1; then
+    "$PGBIN/pg_ctl" --pgdata="$DATA" --mode=fast --wait stop
+  else
+    echo "Not running"
+  fi
+}
+
+status() {
+  if "$PGBIN/pg_ctl" --pgdata="$DATA" status >/dev/null 2>&1; then
+    "$PGBIN/pg_ctl" --pgdata="$DATA" status
+  else
+    echo "Not running"
+  fi
+}
+
+psql_cmd() {
+  "$PGBIN/psql" --host=127.0.0.1 --port="$PORT" --username=ai_pop_music "$@"
+}
+
+setup() {
+  start
+  for db in ai_pop_music_development ai_pop_music_test; do
+    if psql_cmd --dbname=postgres -tAc "SELECT 1 FROM pg_database WHERE datname = '$db'" | grep -q 1; then
+      echo "$db already exists"
+    else
+      psql_cmd --dbname=postgres --command="CREATE DATABASE $db" >/dev/null
+      echo "Created $db"
+    fi
+  done
+}
+
+destroy() {
+  stop
+  echo "Removing $ROOT"
+  rm -rf "$ROOT"
+}
+
+require_binaries
+
+case "${1:-}" in
+  start)   start ;;
+  stop)    stop ;;
+  restart) stop; start ;;
+  status)  status ;;
+  setup)   setup ;;
+  psql)    shift; psql_cmd "$@" ;;
+  destroy) destroy ;;
+  *)
+    echo "Usage: bin/pg {start|stop|restart|status|setup|psql|destroy}" >&2
+    exit 1
+    ;;
+esac

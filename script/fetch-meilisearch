@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+#
+# Download Meilisearch as a project-local binary.
+#
+# This exists because Docker Desktop's WSL integration is not enabled for this
+# distribution, and Meilisearch ships as a single self-contained binary with no
+# runtime dependencies. Running it from .tools/ keeps the install folder-scoped
+# and needs no root access.
+#
+# docker-compose.yml is still the intended path once WSL integration is on. See
+# docs/project-context.md.
+#
+# Usage:
+#   script/fetch-meilisearch            # latest release
+#   script/fetch-meilisearch v1.53.0    # specific version
+#
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+DEST="$ROOT/.tools/meilisearch"
+VERSION="${1:-latest}"
+
+if [ "$VERSION" = "latest" ]; then
+  URL="https://github.com/meilisearch/meilisearch/releases/latest/download/meilisearch-linux-amd64"
+else
+  URL="https://github.com/meilisearch/meilisearch/releases/download/${VERSION}/meilisearch-linux-amd64"
+fi
+
+mkdir -p "$DEST"
+
+echo "Downloading Meilisearch ($VERSION)"
+curl -fL --retry 4 --retry-all-errors --progress-bar "$URL" -o "$DEST/meilisearch"
+chmod +x "$DEST/meilisearch"
+
+echo
+echo "Version:"
+"$DEST/meilisearch" --version
+
+echo
+echo "Installed at .tools/meilisearch/meilisearch"

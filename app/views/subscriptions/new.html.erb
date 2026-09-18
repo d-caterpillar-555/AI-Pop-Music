@@ -1,0 +1,58 @@
+<% page_title "Start #{@plan.name}" %>
+
+<section class="wrap grid gap-10 lg:grid-cols-[2fr_1fr] lg:items-start">
+  <div>
+    <p class="meta uppercase"><%= link_to "Plans", plans_path, class: "underline" %></p>
+    <h1 class="mt-4 text-3xl">Start <%= @plan.name %></h1>
+
+    <% if @subscription&.plan == @plan && @subscription.awaiting_activation? %>
+      <p class="measure mt-4 text-ink-600">
+        You already have a <%= @plan.name %> subscription waiting on payment.
+        <% if (pending = current_user.orders.awaiting_payment.recent.first) %>
+          <%= link_to "View the order", order_path(pending), class: "underline" %>.
+        <% end %>
+      </p>
+    <% else %>
+      <p class="measure mt-4 text-ink-600">
+        <%= formatted_price(@plan.price_cents, @plan.currency) %> <%= @plan.billed_as %>,
+        covering <%= pluralize(@plan.genre_limit, "genre") %>.
+      </p>
+
+      <% if @subscription && @subscription.plan_id != @plan.id %>
+        <p class="measure mt-4 text-sm text-warn">
+          This changes your current subscription from <%= @subscription.plan.name %> to
+          <%= @plan.name %>. Genres you already picked stay, up to the new limit.
+        </p>
+      <% end %>
+
+      <%= form_with url: subscription_path(plan_slug: @plan.slug), method: :post, class: "mt-8" do %>
+        <%= submit_tag "Record this order", class: "btn btn-primary" %>
+      <% end %>
+
+      <p class="measure mt-6 text-sm text-ink-600">
+        No payment is taken here. Your order is recorded and an admin completes the payment
+        with you; the subscription activates as soon as it is settled.
+      </p>
+    <% end %>
+  </div>
+
+  <aside class="card p-6">
+    <p class="font-display text-xl"><%= @plan.name %></p>
+    <p class="meta mt-1"><%= @plan.billed_as %></p>
+    <hr class="rule my-4">
+    <dl class="space-y-3 text-sm">
+      <div class="flex justify-between gap-4">
+        <dt class="text-ink-600">Price</dt>
+        <dd><%= formatted_price(@plan.price_cents, @plan.currency) %></dd>
+      </div>
+      <div class="flex justify-between gap-4">
+        <dt class="text-ink-600">Genres included</dt>
+        <dd><%= @plan.genre_limit %></dd>
+      </div>
+      <div class="flex justify-between gap-4">
+        <dt class="text-ink-600">Downloads</dt>
+        <dd>Unlimited</dd>
+      </div>
+    </dl>
+  </aside>
+</section>

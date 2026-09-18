@@ -1,0 +1,52 @@
+# PostgreSQL.
+#
+# Development and test connect to the project-local cluster managed by bin/pg,
+# which listens on 5434 because the machine's system PostgreSQL cluster owns
+# 5432 and the sibling storefront project's cluster owns 5433. Connection
+# details come from the environment with development defaults, so
+# `bin/rails db:prepare` works after `bin/pg setup`.
+#
+# Development runs Solid Queue against its own database so background work is
+# durable across restarts. Generation runs take minutes and must survive a
+# reload, so an in-process :async adapter is not good enough.
+#
+# Production takes a single DATABASE_URL from the deployment secret store.
+
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  host: <%= ENV.fetch("DATABASE_HOST", "127.0.0.1") %>
+  port: <%= ENV.fetch("DATABASE_PORT", 5434) %>
+  username: <%= ENV.fetch("DATABASE_USER", "ai_pop_music") %>
+  password: <%= ENV.fetch("DATABASE_PASSWORD", "ai_pop_music_dev") %>
+  max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+
+development:
+  primary:
+    <<: *default
+    database: ai_pop_music_development
+  queue:
+    <<: *default
+    database: ai_pop_music_development_queue
+    migrations_paths: db/queue_migrate
+
+test:
+  <<: *default
+  database: ai_pop_music_test
+
+production:
+  primary: &primary_production
+    <<: *default
+    url: <%= ENV["DATABASE_URL"] %>
+  cache:
+    <<: *primary_production
+    database: ai_pop_music_production_cache
+    migrations_paths: db/cache_migrate
+  queue:
+    <<: *primary_production
+    database: ai_pop_music_production_queue
+    migrations_paths: db/queue_migrate
+  cable:
+    <<: *primary_production
+    database: ai_pop_music_production_cable
+    migrations_paths: db/cable_migrate

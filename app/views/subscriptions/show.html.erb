@@ -1,0 +1,97 @@
+<% page_title "Subscription" %>
+
+<section class="wrap">
+  <h1 class="text-3xl">Your subscription</h1>
+
+  <div class="mt-6 flex flex-wrap items-center gap-4">
+    <%= status_chip @subscription.status,
+      tone: (@subscription.active? ? :ok : (@subscription.past_due? ? :warn : :muted)) %>
+    <p class="text-ink-600"><%= @plan.name %>, <%= formatted_price(@plan.price_cents, @plan.currency) %> <%= @plan.billed_as %></p>
+  </div>
+
+  <% unless @subscription.active? || @subscription.past_due? %>
+    <div class="card mt-6 p-5">
+      <p class="font-display text-lg">This subscription is not active yet</p>
+      <p class="mt-2 text-sm text-ink-600">
+        Downloads unlock once payment is settled.
+        <% if @pending_order %>
+          <%= link_to "View your order", order_path(@pending_order), class: "underline" %>
+        <% end %>
+      </p>
+    </div>
+  <% end %>
+
+  <div class="mt-10 grid gap-10 lg:grid-cols-2">
+    <section>
+      <h2 class="text-xl">Genres you cover</h2>
+      <p class="meta mt-1">
+        <%= @entitlements.size %> of <%= @plan.genre_limit %> used
+      </p>
+
+      <% if @entitlements.any? %>
+        <ul class="mt-4 divide-y divide-paper-100 border-y border-paper-100">
+          <% @entitlements.each do |entitlement| %>
+            <li class="flex items-center justify-between gap-4 py-3">
+              <span><%= link_to entitlement.genre.name, genre_path(entitlement.genre), class: "hover:underline" %></span>
+              <%= button_to "Remove", subscription_genre_path(entitlement.genre.slug, genre_slug: entitlement.genre.slug),
+                method: :delete, class: "btn btn-ghost text-sm" %>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="mt-4 text-sm text-ink-600">No genres chosen yet. Pick from the list below.</p>
+      <% end %>
+    </section>
+
+    <section>
+      <h2 class="text-xl">Available genres</h2>
+      <p class="meta mt-1"><%= pluralize(@subscription.remaining_genre_slots, "slot") %> remaining</p>
+
+      <% if @available_genres.any? %>
+        <ul class="mt-4 divide-y divide-paper-100 border-y border-paper-100">
+          <% @available_genres.each do |genre| %>
+            <li class="flex items-center justify-between gap-4 py-3">
+              <span>
+                <%= link_to genre.name, genre_path(genre), class: "hover:underline" %>
+                <span class="meta"><%= pluralize(genre.track_count, "track") %></span>
+              </span>
+              <%= button_to "Add", subscription_genres_path(genre_slug: genre.slug),
+                class: "btn btn-secondary text-sm",
+                disabled: @subscription.at_genre_limit? %>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="mt-4 text-sm text-ink-600">Every published genre is already on your subscription.</p>
+      <% end %>
+    </section>
+  </div>
+
+  <div class="mt-12 border-t border-paper-100 pt-6">
+    <h2 class="text-xl">Billing history</h2>
+    <ul class="mt-4 divide-y divide-paper-100 border-y border-paper-100">
+      <% events = @subscription.subscription_events.order(occurred_at: :desc) %>
+      <% if events.any? %>
+        <% events.each do |event| %>
+          <li class="flex flex-wrap items-baseline justify-between gap-2 py-3">
+            <span class="text-sm"><%= event.kind.titleize %></span>
+            <span class="meta"><%= event.occurred_at.strftime("%-d %b %Y, %H:%M UTC") %></span>
+          </li>
+        <% end %>
+      <% else %>
+        <li class="py-3 text-sm text-ink-600">No history yet.</li>
+      <% end %>
+    </ul>
+
+    <% if @subscription.canceled? %>
+      <p class="meta mt-4">This subscription was canceled <%= @subscription.canceled_at&.strftime("%-d %b %Y") %>.</p>
+    <% else %>
+      <div class="mt-6">
+        <%= button_to "Cancel subscription", subscription_path, method: :delete,
+          class: "btn btn-ghost text-sm",
+          data: { turbo_confirm: "Cancel your subscription? Downloads stop immediately, and your history is kept." } %>
+        <p class="meta mt-2">Cancelling removes the genre entitlements at once. Your download history is kept.</p>
+      </div>
+    <% end %>
+  </div>
+</section>

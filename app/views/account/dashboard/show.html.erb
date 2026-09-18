@@ -1,0 +1,75 @@
+<% page_title "Your account" %>
+
+<section class="wrap">
+  <div class="flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <p class="meta uppercase">Account</p>
+      <h1 class="mt-2 text-3xl">Hello, <%= member.name.split.first %></h1>
+    </div>
+    <nav aria-label="Account" class="flex flex-wrap gap-3 text-sm">
+      <%= link_to "Subscription", subscription_path, class: "underline" %>
+      <%= link_to "Downloads", account_downloads_path, class: "underline" %>
+      <%= link_to "Orders", account_orders_path, class: "underline" %>
+      <%= link_to "Profile", account_profile_path, class: "underline" %>
+      <%= link_to "Consents", account_consent_path, class: "underline" %>
+      <%= link_to "Your data", account_data_requests_path, class: "underline" %>
+    </nav>
+  </div>
+
+  <div class="mt-10 grid gap-6 lg:grid-cols-2">
+    <section class="card p-6">
+      <h2 class="font-display text-xl">Subscription</h2>
+      <% if @subscription %>
+        <div class="mt-3 flex flex-wrap items-center gap-3">
+          <%= status_chip @subscription.status,
+            tone: (@subscription.active? ? :ok : (@subscription.past_due? ? :warn : :muted)) %>
+          <span class="text-sm text-ink-600"><%= @plan.name %></span>
+        </div>
+        <p class="meta mt-3">
+          <%= @entitlements.size %> of <%= @plan.genre_limit %> genres covered
+        </p>
+        <% if @subscription.current_period_end.present? %>
+          <p class="meta mt-1">Renews <%= @subscription.current_period_end.strftime("%-d %b %Y") %></p>
+        <% end %>
+        <div class="mt-5 flex flex-wrap gap-3">
+          <%= link_to "Manage", subscription_path, class: "btn btn-secondary text-sm" %>
+          <%= link_to "Browse genres", genres_path, class: "btn btn-ghost text-sm" %>
+        </div>
+      <% else %>
+        <p class="mt-3 text-sm text-ink-600">
+          No subscription yet. Downloads unlock with one.
+        </p>
+        <%= link_to "See plans", plans_path, class: "btn btn-primary mt-5 text-sm" %>
+      <% end %>
+    </section>
+
+    <section class="card p-6">
+      <h2 class="font-display text-xl">Recent downloads</h2>
+      <% if @recent_downloads.any? %>
+        <ul class="mt-3 divide-y divide-paper-100">
+          <% @recent_downloads.each do |download| %>
+            <li class="flex items-baseline justify-between gap-3 py-2">
+              <span class="truncate text-sm">
+                <%= link_to download.track.title, track_path(download.track), class: "hover:underline" %>
+              </span>
+              <span class="meta"><%= download.created_at.strftime("%-d %b") %></span>
+            </li>
+          <% end %>
+        </ul>
+        <p class="meta mt-4"><%= link_to "All downloads", account_downloads_path, class: "underline" %></p>
+      <% else %>
+        <p class="mt-3 text-sm text-ink-600">Nothing downloaded yet.</p>
+      <% end %>
+    </section>
+  </div>
+
+  <% if @pending_order %>
+    <div class="card mt-6 p-5">
+      <p class="font-display text-lg">An order is waiting on payment</p>
+      <p class="mt-2 text-sm text-ink-600">
+        Order <%= @pending_order.number %> for <%= @pending_order.plan.name %>.
+        <%= link_to "View the order", order_path(@pending_order), class: "underline" %>.
+      </p>
+    </div>
+  <% end %>
+</section>

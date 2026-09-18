@@ -1,0 +1,35 @@
+<% page_title "Your data" %>
+
+<section class="wrap measure">
+  <p class="meta uppercase"><%= link_to "Account", account_root_path, class: "underline" %></p>
+  <h1 class="mt-3 text-3xl">Your data</h1>
+  <p class="mt-3 text-ink-600">
+    Request a copy of your data, or ask us to delete your personal details. Requests are
+    logged here and actioned within 30 days.
+  </p>
+
+  <div class="mt-6 flex flex-wrap gap-3">
+    <%= link_to "New request", new_account_data_request_path, class: "btn btn-secondary" %>
+  </div>
+
+  <% if @data_requests.any? %>
+    <ul class="mt-8 divide-y divide-paper-100 border-y border-paper-100">
+      <% @data_requests.each do |request| %>
+        <li class="flex flex-wrap items-center justify-between gap-4 py-4">
+          <div>
+            <p class="font-display text-lg"><%= request.kind.titleize %></p>
+            <p class="meta mt-1">Requested <%= request.requested_at.strftime("%-d %b %Y") %></p>
+          </div>
+          <%= status_chip request.status, tone: (request.completed? ? :ok : :muted) %>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="mt-8 text-ink-600">No requests yet.</p>
+  <% end %>
+
+  <p class="measure mt-10 text-sm text-ink-600">
+    A deletion removes your name, email and sign-in details. Your order and download records
+    remain, because they are the evidence that a licence was granted for the files you hold.
+  </p>
+</section>

@@ -1,0 +1,16 @@
+<% page_title @post.title %>
+<% page_description(@post.excerpt.presence || @post.title) %>
+
+<article class="wrap measure">
+  <p class="meta uppercase"><%= link_to "Blog", blog_path, class: "underline" %></p>
+  <h1 class="mt-4 text-4xl"><%= @post.title %></h1>
+  <p class="meta mt-3"><%= @post.published_at.strftime("%-d %b %Y") %></p>
+
+  <% if @post.excerpt.present? %>
+    <p class="mt-6 text-lg text-ink-600"><%= @post.excerpt %></p>
+  <% end %>
+
+  <div class="mt-8 text-ink-600">
+    <%= simple_format @post.body %>
+  </div>
+</article>

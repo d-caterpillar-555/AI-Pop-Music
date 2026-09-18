@@ -1,0 +1,164 @@
+#!/usr/bin/env bash
+#
+# Prove that the database constraints actually fire.
+#
+# A constraint that exists is not the same as a constraint that works. This
+# script attempts real violations inside a transaction, asserts that PostgreSQL
+# refuses each one, then rolls back. Anything that succeeds is reported as a
+# failure, because it means an invariant the application relies on is not
+# actually enforced.
+#
+# Each test builds its own fixture rows inside its own transaction. That matters:
+# a test that inserts nothing always "passes".
+#
+# This is gems.md section 14A made executable, and follows the
+# database-assistant skill's rule: use constraints for data integrity, and prove
+# it rather than asserting it.
+#
+# Usage: script/db-verify
+#
+set -uo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
+
+PSQL="bin/pg psql --dbname=ai_pop_music_development"
+pass=0
+fail=0
+
+run() {
+  $PSQL -v ON_ERROR_STOP=1 -q -c "begin; $1 rollback;" 2>&1
+}
+
+expect_reject() {
+  local label="$1" sql="$2" out
+
+  out="$(run "$sql")"
+  if [ $? -ne 0 ]; then
+    printf '  rejected  %s\n' "$label"
+    pass=$((pass + 1))
+  else
+    printf '  ACCEPTED  %s   <-- constraint did not fire\n' "$label"
+    fail=$((fail + 1))
+  fi
+}
+
+expect_accept() {
+  local label="$1" sql="$2" out
+
+  out="$(run "$sql")"
+  if [ $? -eq 0 ]; then
+    printf '  accepted  %s\n' "$label"
+    pass=$((pass + 1))
+  else
+    printf '  REJECTED  %s   <-- legitimate data refused\n' "$label"
+    printf '            %s\n' "$(printf '%s' "$out" | grep -m1 ERROR)"
+    fail=$((fail + 1))
+  fi
+}
+
+GENRE="insert into genres (name, slug, position, published, created_at, updated_at) values ('Fixture Genre', 'fixture-genre', 1, true, now(), now());"
+PLAN="insert into plans (name, slug, price_cents, genre_limit, created_at, updated_at) values ('Fixture Plan', 'fixture-plan', 500, 1, now(), now());"
+USER="insert into users (email, encrypted_password, name, role, terms_accepted_at, created_at, updated_at) values ('fixture@example.com', 'x', 'Fixture', 'member', now(), now(), now());"
+SUBSCRIPTION="insert into subscriptions (user_id, plan_id, status, created_at, updated_at) select u.id, p.id, 'active', now(), now() from users u, plans p where u.email = 'fixture@example.com' and p.slug = 'fixture-plan';"
+TRACK="insert into tracks (genre_id, title, slug, status, published_at, created_at, updated_at) select id, 'Fixture Track', 'fixture-track', 'published', now(), now(), now() from genres where slug = 'fixture-genre';"
+
+echo "Constraint verification against ai_pop_music_development"
+echo
+echo "Plans and accounts"
+echo
+
+expect_reject "a plan priced at zero" \
+  "insert into plans (name, slug, price_cents, genre_limit, created_at, updated_at) values ('Bad', 'bad-plan-price', 0, 1, now(), now());"
+
+expect_reject "a plan with no genres" \
+  "insert into plans (name, slug, price_cents, genre_limit, created_at, updated_at) values ('Bad', 'bad-plan-limit', 500, 0, now(), now());"
+
+expect_reject "a plan with an unknown billing interval" \
+  "insert into plans (name, slug, price_cents, genre_limit, interval, created_at, updated_at) values ('Bad', 'bad-plan-interval', 500, 1, 'weekly', now(), now());"
+
+expect_reject "a user with an unknown role" \
+  "insert into users (email, encrypted_password, name, role, terms_accepted_at, created_at, updated_at) values ('role@example.com', 'x', 'n', 'superuser', now(), now(), now());"
+
+expect_reject "a user with an empty name" \
+  "insert into users (email, encrypted_password, name, terms_accepted_at, created_at, updated_at) values ('noname@example.com', 'x', '', now(), now(), now());"
+
+expect_reject "a duplicate email" \
+  "$USER $USER"
+
+echo
+echo "Catalogue"
+echo
+
+expect_reject "a slug with capitals or spaces" \
+  "insert into genres (name, slug, position, published, created_at, updated_at) values ('Bad', 'Not A Slug', 1, true, now(), now());"
+
+expect_reject "a published track with no published_at" \
+  "$GENRE insert into tracks (genre_id, title, slug, status, created_at, updated_at) select id, 'x', 'x-track', 'published', now(), now() from genres where slug = 'fixture-genre';"
+
+expect_reject "a track at 900 bpm" \
+  "$GENRE insert into tracks (genre_id, title, slug, status, bpm, published_at, created_at, updated_at) select id, 'x', 'x-bpm', 'published', 900, now(), now(), now() from genres where slug = 'fixture-genre';"
+
+expect_reject "a duplicate track slug" \
+  "$GENRE $TRACK $TRACK"
+
+echo
+echo "Subscriptions and licences"
+echo
+
+expect_reject "two live subscriptions for one member" \
+  "$PLAN $USER $SUBSCRIPTION $SUBSCRIPTION"
+
+expect_reject "a subscription whose period ends before it starts" \
+  "$PLAN $USER insert into subscriptions (user_id, plan_id, status, current_period_start, current_period_end, created_at, updated_at) select u.id, p.id, 'active', now(), now() - interval '1 day', now(), now() from users u, plans p where u.email = 'fixture@example.com' and p.slug = 'fixture-plan';"
+
+expect_reject "the same genre granted twice on one subscription" \
+  "$GENRE $PLAN $USER $SUBSCRIPTION insert into genre_entitlements (subscription_id, genre_id, created_at, updated_at) select s.id, g.id, now(), now() from subscriptions s, genres g where g.slug = 'fixture-genre'; insert into genre_entitlements (subscription_id, genre_id, created_at, updated_at) select s.id, g.id, now(), now() from subscriptions s, genres g where g.slug = 'fixture-genre';"
+
+expect_reject "an order marked paid with no payment time" \
+  "$PLAN $USER insert into orders (user_id, plan_id, number, public_token, amount_cents, status, placed_at, created_at, updated_at) select u.id, p.id, 'APM-FIX', 'a-public-token-of-sufficient-length', 500, 'paid', now(), now(), now() from users u, plans p where u.email = 'fixture@example.com' and p.slug = 'fixture-plan';"
+
+expect_reject "an order with a guessable public token" \
+  "$PLAN $USER insert into orders (user_id, plan_id, number, public_token, amount_cents, placed_at, created_at, updated_at) select u.id, p.id, 'APM-FIX2', 'short', 500, now(), now(), now() from users u, plans p where u.email = 'fixture@example.com' and p.slug = 'fixture-plan';"
+
+echo
+echo "Append-only audit tables"
+echo
+
+expect_reject "updating a licence record" \
+  "$GENRE $PLAN $USER $TRACK insert into track_downloads (user_id, track_id, license_terms_version, created_at) select u.id, t.id, 'v1', now() from users u, tracks t where u.email = 'fixture@example.com' and t.slug = 'fixture-track'; update track_downloads set license_terms_version = 'tampered' where license_terms_version = 'v1';"
+
+expect_reject "deleting a licence record" \
+  "$GENRE $PLAN $USER $TRACK insert into track_downloads (user_id, track_id, license_terms_version, created_at) select u.id, t.id, 'v2', now() from users u, tracks t where u.email = 'fixture@example.com' and t.slug = 'fixture-track'; delete from track_downloads where license_terms_version = 'v2';"
+
+expect_reject "updating a subscription event" \
+  "$PLAN $USER $SUBSCRIPTION insert into subscription_events (subscription_id, kind, occurred_at, created_at) select id, 'activated', now(), now() from subscriptions; update subscription_events set kind = 'canceled' where kind = 'activated';"
+
+expect_reject "updating a consent record" \
+  "insert into consent_records (subject_token, kind, granted_at, policy_version, created_at) values ('t', 'analytics', now(), 'v1', now()); update consent_records set policy_version = 'tampered' where subject_token = 't';"
+
+expect_reject "a consent withdrawal that predates the grant" \
+  "insert into consent_records (subject_token, kind, granted_at, revoked_at, policy_version, created_at) values ('t2', 'analytics', now(), now() - interval '1 day', 'v1', now());"
+
+echo
+echo "Generation"
+echo
+
+expect_reject "a failed run with no error recorded" \
+  "$GENRE insert into generation_batches (genre_id, name, prompt_style, created_at, updated_at) select id, 'b', 'style', now(), now() from genres where slug = 'fixture-genre'; insert into generation_runs (generation_batch_id, status, created_at, updated_at) select id, 'failed', now(), now() from generation_batches where name = 'b';"
+
+expect_reject "a run that finishes before it starts" \
+  "$GENRE insert into generation_batches (genre_id, name, prompt_style, created_at, updated_at) select id, 'b2', 'style', now(), now() from genres where slug = 'fixture-genre'; insert into generation_runs (generation_batch_id, status, started_at, finished_at, created_at, updated_at) select id, 'succeeded', now(), now() - interval '1 hour', now(), now() from generation_batches where name = 'b2';"
+
+echo
+echo "Legitimate data must still be accepted"
+echo
+
+expect_accept "a valid genre" "$GENRE"
+expect_accept "a valid plan" "$PLAN"
+expect_accept "a valid member with a live subscription and a licence" \
+  "$GENRE $PLAN $USER $SUBSCRIPTION insert into genre_entitlements (subscription_id, genre_id, created_at, updated_at) select s.id, g.id, now(), now() from subscriptions s, genres g where g.slug = 'fixture-genre'; $TRACK insert into track_downloads (user_id, track_id, license_terms_version, created_at) select u.id, t.id, '2026-09-18', now() from users u, tracks t where u.email = 'fixture@example.com' and t.slug = 'fixture-track';"
+
+echo
+echo "Result: $pass passed, $fail failed"
+exit $((fail > 0))

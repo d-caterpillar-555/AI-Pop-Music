@@ -1,0 +1,185 @@
+<% page_title "Plans and pricing" %>
+<% page_description "Every AI Pop Music plan is $5 per genre, per month. Full-length 48 kHz masters, unlimited downloads inside your genres, licensed for commercial use." %>
+
+<section class="wrap">
+  <h1 class="text-3xl">Plans</h1>
+
+  <p class="measure mt-4 text-lg text-ink-600">
+    Every plan costs the same per genre: <strong class="text-ink-950">$5 per genre, per month</strong>.
+    The only question is how many genres you work in.
+  </p>
+  <p class="measure mt-3 text-ink-600">
+    Unlimited downloads inside the genres you pick, full-length 48 kHz masters, and a licence
+    record written as you download.
+  </p>
+</section>
+
+<section class="wrap mt-12">
+  <div class="overflow-x-auto">
+    <table class="w-full border-collapse text-sm">
+      <caption class="sr-only">Comparison of AI Pop Music subscription plans</caption>
+      <thead>
+        <tr>
+          <th scope="col" class="border-b border-paper-100 py-4 pr-4 text-left align-bottom">
+            <span class="meta uppercase">Compare</span>
+          </th>
+          <% @plans.each do |plan| %>
+            <th scope="col" class="border-b border-paper-100 p-4 text-left align-bottom <%= "bg-paper-100" if plan.slug == "pro" %>">
+              <% if plan.slug == "pro" %>
+                <span class="chip chip-ok">Recommended start</span>
+              <% end %>
+              <span class="mt-2 block font-display text-2xl"><%= plan.name %></span>
+              <span class="mt-1 block">
+                <span class="font-display text-3xl"><%= formatted_price(plan.price_cents, plan.currency) %></span>
+                <span class="meta"><%= plan.billed_as %></span>
+              </span>
+            </th>
+          <% end %>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row" class="border-b border-paper-100 py-3 pr-4 text-left font-normal text-ink-600">Genres covered</th>
+          <% @plans.each do |plan| %>
+            <td class="border-b border-paper-100 p-4 <%= "bg-paper-100" if plan.slug == "pro" %>">
+              <%= pluralize(plan.genre_limit, "genre") %>
+            </td>
+          <% end %>
+        </tr>
+        <tr>
+          <th scope="row" class="border-b border-paper-100 py-3 pr-4 text-left font-normal text-ink-600">Downloads inside them</th>
+          <% @plans.each do |plan| %>
+            <td class="border-b border-paper-100 p-4 <%= "bg-paper-100" if plan.slug == "pro" %>">Unlimited</td>
+          <% end %>
+        </tr>
+        <tr>
+          <th scope="row" class="border-b border-paper-100 py-3 pr-4 text-left font-normal text-ink-600">Master format</th>
+          <% @plans.each do |plan| %>
+            <td class="border-b border-paper-100 p-4 <%= "bg-paper-100" if plan.slug == "pro" %>">48 kHz stereo FLAC</td>
+          <% end %>
+        </tr>
+        <tr>
+          <th scope="row" class="border-b border-paper-100 py-3 pr-4 text-left font-normal text-ink-600">Commercial licence</th>
+          <% @plans.each do |plan| %>
+            <td class="border-b border-paper-100 p-4 <%= "bg-paper-100" if plan.slug == "pro" %>">
+              Yes, recorded per download
+            </td>
+          <% end %>
+        </tr>
+        <tr>
+          <th scope="row" class="border-b border-paper-100 py-3 pr-4 text-left font-normal text-ink-600">Attribution required</th>
+          <% @plans.each do |plan| %>
+            <td class="border-b border-paper-100 p-4 <%= "bg-paper-100" if plan.slug == "pro" %>">No</td>
+          <% end %>
+        </tr>
+        <tr>
+          <th scope="row" class="py-3 pr-4 text-left font-normal text-ink-600">Cancel</th>
+          <% @plans.each do |plan| %>
+            <td class="p-4 <%= "bg-paper-100" if plan.slug == "pro" %>">Any time</td>
+          <% end %>
+        </tr>
+        <tr>
+          <td class="pt-6 pr-4"></td>
+          <% @plans.each do |plan| %>
+            <td class="p-4 pt-6 <%= "bg-paper-100" if plan.slug == "pro" %>">
+              <%= link_to "Choose #{plan.name}", subscribe_path(plan_slug: plan.slug),
+                class: "btn #{plan.slug == "pro" ? "btn-primary" : "btn-secondary"} w-full" %>
+            </td>
+          <% end %>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="wrap mt-16">
+  <h2 class="text-2xl">Which one is right for me?</h2>
+  <ul class="mt-6 grid gap-6 lg:grid-cols-3">
+    <li class="card p-6">
+      <p class="font-display text-xl">Starter - one sound, done properly</p>
+      <p class="mt-3 text-sm text-ink-600">
+        You make one kind of thing and need it to sound consistent: a series, a channel with a
+        fixed mood, a single long-running project.
+      </p>
+    </li>
+    <li class="card p-6">
+      <p class="font-display text-xl">Pro - a few moods in rotation</p>
+      <p class="mt-3 text-sm text-ink-600">
+        You cut different kinds of pieces - an intro, a bed, something under a montage - and you
+        do not want the same three tracks in everything you publish.
+      </p>
+      <p class="meta mt-3">Three genres is where most work sits: faster, slower, and atmospheric.</p>
+    </li>
+    <li class="card p-6">
+      <p class="font-display text-xl">Studio - a catalogue, not a track</p>
+      <p class="mt-3 text-sm text-ink-600">
+        You produce for other people, run several channels, or need enough variety that clients
+        never hear the same bed twice.
+      </p>
+    </li>
+  </ul>
+</section>
+
+<section class="wrap mt-16">
+  <div class="card p-6">
+    <h2 class="font-display text-xl">What happens when you cancel</h2>
+    <p class="measure mt-2 text-sm text-ink-600">
+      Downloads stop, and the genres stop being available. Anything you already downloaded and
+      published stays licensed under the terms in force on the day you took it - so cancelling
+      never puts a released project at risk.
+    </p>
+  </div>
+</section>
+
+<% faqs = {
+  "How is the price calculated?" =>
+    "Every plan costs $5 per genre, per month. Starter covers 1 genre for $5, Pro covers 3 for $15, " \
+    "Studio covers 10 for $50 - the same rate at every size. You are paying for how many genres you " \
+    "need, not for a discount on volume.",
+  "Which genres should I pick?" =>
+    "Pick by what you are publishing, not by what sounds interesting. Every genre page lists tempo, key, " \
+    "duration and mood per track, so you can check the fit against your edit before you commit. You can " \
+    "swap genres at any time without changing the price.",
+  "Can I upgrade or downgrade later?" =>
+    "Yes. Changing your plan changes how many genres you may hold, and your existing picks carry over up " \
+    "to the new limit.",
+  "How is payment taken?" =>
+    "No card gateway is connected yet. Requesting a plan records your order, and we settle it with you " \
+    "directly and activate the subscription. Nothing is charged automatically in the meantime.",
+  "What exactly am I allowed to do with a track?" =>
+    "Use it in unlimited productions, monetise them anywhere, edit and mix it into your work, and deliver " \
+    "it to clients. You may not resell the track itself as music, register it as your own composition, or " \
+    "train a model on it. The licence page states both lists in full."
+} %>
+
+<section class="wrap mt-16">
+  <h2 class="text-2xl">Pricing questions</h2>
+  <dl class="measure mt-6 divide-y divide-paper-100 border-y border-paper-100">
+    <% faqs.each do |question, answer| %>
+      <div class="py-5">
+        <dt class="font-display text-lg"><%= question %></dt>
+        <dd class="mt-2 text-sm text-ink-600"><%= answer %></dd>
+      </div>
+    <% end %>
+  </dl>
+
+  <p class="meta mt-6">
+    Full terms on the <%= link_to "licence page", page_license_path, class: "underline" %>.
+  </p>
+</section>
+
+<%= structured_data(plans_structured_data(@plans)) %>
+<%= structured_data(faq_structured_data(faqs)) %>
+
+<section class="wrap mt-16">
+  <div class="card flex flex-wrap items-center justify-between gap-6 p-8">
+    <div>
+      <h2 class="text-2xl">Ready when you are</h2>
+      <p class="mt-2 text-sm text-ink-600">Preview the catalogue first - listening needs no account.</p>
+    </div>
+    <div class="flex flex-wrap gap-3">
+      <%= link_to "Browse genres", genres_path, class: "btn btn-secondary" %>
+      <%= link_to "Start with Starter", subscribe_path(plan_slug: "starter"), class: "btn btn-primary" %>
+    </div>
+  </div>
+</section>

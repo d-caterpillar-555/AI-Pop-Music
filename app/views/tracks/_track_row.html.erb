@@ -1,0 +1,24 @@
+<%# One row per track. `entitled` decides whether the download control is an
+    action or a prompt to subscribe - the same information the policy uses. %>
+<li id="<%= dom_id(track) %>" class="flex flex-wrap items-center gap-4 py-4">
+  <div class="min-w-0 flex-1">
+    <p class="font-display text-lg leading-tight">
+      <%= link_to track.title, track_path(track), class: "hover:underline" %>
+    </p>
+    <p class="meta mt-1 truncate"><%= track.metadata_line %></p>
+  </div>
+
+  <% if track.preview.attached? %>
+    <audio controls preload="none" class="h-9 w-56" src="<%= track_preview_path(track) %>">
+      <a href="<%= track_preview_path(track) %>">Play preview</a>
+    </audio>
+  <% else %>
+    <span class="meta">Preview pending</span>
+  <% end %>
+
+  <% if entitled %>
+    <%= button_to "Download master", track_downloads_path(track), class: "btn btn-primary text-sm" %>
+  <% else %>
+    <%= link_to "Subscribe to download", plans_path, class: "btn btn-secondary text-sm" %>
+  <% end %>
+</li>

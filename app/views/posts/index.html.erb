@@ -1,0 +1,24 @@
+<% page_title "Blog" %>
+
+<section class="wrap">
+  <h1 class="text-3xl">Blog</h1>
+  <p class="measure mt-3 text-ink-600">Notes on the catalogue, licensing and how the songs are made.</p>
+
+  <% if @posts.any? %>
+    <ul class="mt-10 divide-y divide-paper-100 border-y border-paper-100">
+      <% @posts.each do |post| %>
+        <li class="py-6">
+          <p class="meta"><%= post.published_at.strftime("%-d %b %Y") %></p>
+          <h2 class="mt-2 text-2xl">
+            <%= link_to post.title, blog_post_path(post), class: "hover:underline" %>
+          </h2>
+          <% if post.excerpt.present? %>
+            <p class="measure mt-2 text-ink-600"><%= post.excerpt %></p>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="mt-10 text-ink-600">Nothing published yet.</p>
+  <% end %>
+</section>

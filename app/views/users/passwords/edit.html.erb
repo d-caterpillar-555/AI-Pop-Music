@@ -1,0 +1,32 @@
+<% page_title "Choose a new password" %>
+
+<section class="wrap measure">
+  <h1 class="text-3xl">Choose a new password</h1>
+
+  <%= form_with model: resource, as: resource_name, url: user_password_path, method: :put, class: "mt-8 space-y-5" do |form| %>
+    <%= form.hidden_field :reset_password_token %>
+
+    <% if resource.errors.any? %>
+      <div class="card border-danger/40 p-4" role="alert">
+        <ul class="list-inside list-disc text-sm text-ink-600">
+          <% resource.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div>
+      <%= form.label :password, "New password", class: "label" %>
+      <%= form.password_field :password, class: "input", required: true, autocomplete: "new-password" %>
+      <p class="meta mt-1">At least <%= Devise.password_length.min %> characters.</p>
+    </div>
+
+    <div>
+      <%= form.label :password_confirmation, "Confirm new password", class: "label" %>
+      <%= form.password_field :password_confirmation, class: "input", required: true, autocomplete: "new-password" %>
+    </div>
+
+    <%= form.submit "Change password", class: "btn btn-primary" %>
+  <% end %>
+</section>

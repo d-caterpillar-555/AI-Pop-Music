@@ -1,0 +1,38 @@
+<% page_title "Search" %>
+
+<section class="wrap">
+  <h1 class="text-3xl">Search the catalogue</h1>
+
+  <%= form_with url: search_path, method: :get, class: "mt-6 flex flex-wrap items-end gap-3" do %>
+    <div class="flex-1 min-w-64">
+      <%= label_tag :q, "Track, mood or genre", class: "label" %>
+      <%= text_field_tag :q, @query, class: "input", autocomplete: "off", autofocus: true %>
+    </div>
+    <%= submit_tag "Search", class: "btn btn-primary" %>
+  <% end %>
+
+  <% if @query.present? %>
+    <% if @results.any? %>
+      <ul class="mt-10 divide-y divide-paper-100 border-y border-paper-100">
+        <% @results.each do |result| %>
+          <% if result.kind == :genre %>
+            <li class="py-4">
+              <p class="meta uppercase">Genre</p>
+              <p class="font-display text-lg">
+                <%= link_to result.record.name, genre_path(result.record), class: "hover:underline" %>
+              </p>
+            </li>
+          <% else %>
+            <%= render "tracks/track_row", track: result.record,
+              entitled: (current_member ? current_member.can_download?(result.record) : false) %>
+          <% end %>
+        <% end %>
+      </ul>
+    <% else %>
+      <p class="mt-10 text-ink-600">
+        Nothing matched "<%= @query %>". Try a mood, a tempo or a genre name -
+        or <%= link_to "browse the genres", genres_path, class: "underline" %>.
+      </p>
+    <% end %>
+  <% end %>
+</section>

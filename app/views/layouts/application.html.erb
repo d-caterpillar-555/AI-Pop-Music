@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title><%= content_for(:title) || "AI Pop Music" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="description" content="<%= content_for(:description) || "Licensed AI-generated songs for creators. Subscribe to a genre and download cleared tracks for your videos, podcasts and games." %>">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="AI Pop Music">
+    <meta name="mobile-web-app-capable" content="yes">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icon.png">
+
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="min-h-screen flex flex-col">
+    <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:bg-accent focus:text-accent-ink focus:px-3 focus:py-2">
+      Skip to content
+    </a>
+
+    <header class="border-b border-paper-100 bg-paper-50">
+      <div class="wrap flex items-center justify-between gap-6 py-4">
+        <%= link_to root_path, class: "flex items-baseline gap-2" do %>
+          <span class="font-display text-xl font-semibold tracking-tight">AI Pop Music</span>
+          <span class="meta hidden sm:inline">catalogue</span>
+        <% end %>
+
+        <nav aria-label="Primary" class="flex items-center gap-1 sm:gap-2">
+          <%= nav_link "Genres", genres_path %>
+          <%= nav_link "Plans", plans_path %>
+          <%= nav_link "Search", search_path %>
+          <% if user_signed_in? %>
+            <%= nav_link "Account", account_root_path %>
+            <%= button_to "Sign out", destroy_user_session_path, method: :delete, class: "btn btn-ghost text-sm" %>
+          <% else %>
+            <%= nav_link "Sign in", new_user_session_path %>
+          <% end %>
+        </nav>
+      </div>
+    </header>
+
+    <% if notice.present? %>
+      <div class="wrap pt-4">
+        <p class="rounded-control border border-ok/40 bg-white px-4 py-3 text-sm text-ok" role="status"><%= notice %></p>
+      </div>
+    <% end %>
+
+    <% if alert.present? %>
+      <div class="wrap pt-4">
+        <p class="rounded-control border border-danger/40 bg-white px-4 py-3 text-sm text-danger" role="alert"><%= alert %></p>
+      </div>
+    <% end %>
+
+    <main id="main" class="flex-1 py-10">
+      <%= yield %>
+    </main>
+
+    <footer class="border-t border-paper-100 mt-16">
+      <div class="wrap grid gap-8 py-10 sm:grid-cols-3">
+        <div>
+          <p class="font-display text-lg">AI Pop Music</p>
+          <p class="measure mt-2 text-sm text-ink-600">
+            Licensed AI-generated songs for creators. Every download records the licence
+            version it was granted under.
+          </p>
+        </div>
+
+        <nav aria-label="Catalogue" class="text-sm">
+          <p class="meta uppercase">Catalogue</p>
+          <ul class="mt-3 space-y-2">
+            <li><%= link_to "Genres", genres_path %></li>
+            <li><%= link_to "Plans", plans_path %></li>
+            <li><%= link_to "Blog", blog_path %></li>
+          </ul>
+        </nav>
+
+        <nav aria-label="Legal" class="text-sm">
+          <p class="meta uppercase">Legal</p>
+          <ul class="mt-3 space-y-2">
+            <li><%= link_to "License", page_license_path %></li>
+            <li><%= link_to "Terms", page_terms_path %></li>
+            <li><%= link_to "Privacy", page_privacy_path %></li>
+          </ul>
+        </nav>
+      </div>
+
+      <div class="wrap pb-10">
+        <p class="meta">
+          Songs generated with YuE2. Catalogue metadata is recorded from the run that produced each track.
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

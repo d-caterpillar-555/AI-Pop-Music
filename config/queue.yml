@@ -1,0 +1,32 @@
+# Solid Queue workers.
+#
+# The `gpu` queue is pinned to a single thread on purpose: this machine has one
+# 6 GB GPU, and two concurrent YuE2 renders do not fit. Every other queue runs
+# on a separate worker so slow catalogue work never blocks a generation, and a
+# generation never runs beside another generation.
+#
+# Concurrency is additionally guarded inside GenerationRunJob via
+# `limits_concurrency`, so the guarantee holds even if this file is changed.
+
+default: &default
+  dispatchers:
+    - polling_interval: 1
+      batch_size: 500
+  workers:
+    - queues: [ gpu ]
+      threads: 1
+      processes: <%= ENV.fetch("GPU_WORKER_PROCESSES", 1) %>
+      polling_interval: 2
+    - queues: [ default, mailers, indexing ]
+      threads: 3
+      processes: <%= ENV.fetch("JOB_CONCURRENCY", 1) %>
+      polling_interval: 1
+
+development:
+  <<: *default
+
+test:
+  <<: *default
+
+production:
+  <<: *default
