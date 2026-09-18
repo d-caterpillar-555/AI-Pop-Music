@@ -1,75 +1,118 @@
 <% page_title @track.title %>
-<% page_description "Listen to a preview of #{@track.title}, then download the master with a subscription." %>
+<% page_description "Preview #{@track.title}, then download the full-length master with a subscription. Licence recorded per download." %>
 
-<article class="wrap grid gap-10 lg:grid-cols-[2fr_1fr] lg:items-start">
-  <div>
-    <p class="meta uppercase">
-      <%= link_to @track.genre.name, genre_path(@track.genre), class: "underline" %>
-    </p>
+<article class="wrap pt-8">
+  <p class="meta">
+    <%= link_to @track.genre.name, genre_path(@track.genre), class: "hover:text-accent" %>
+  </p>
 
-    <h1 class="mt-4 text-4xl"><%= @track.title %></h1>
+  <div class="mt-6 grid gap-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,4fr)] lg:items-start">
+    <div data-controller="reveal">
+      <%# Named so Turbo morphs it from the row you clicked into this page. %>
+      <h1 class="vt-title display-1 max-w-[20ch]" data-reveal><%= @track.title %></h1>
 
-    <dl class="meta mt-4 flex flex-wrap gap-x-4 gap-y-1">
-      <% if @track.artist_name.present? %><dt class="sr-only">Artist</dt><dd><%= @track.artist_name %></dd><% end %>
-      <% if @track.bpm %><dt class="sr-only">Tempo</dt><dd><%= @track.bpm %> BPM</dd><% end %>
-      <% if @track.musical_key.present? %><dt class="sr-only">Key</dt><dd><%= @track.musical_key %></dd><% end %>
-      <% if @track.duration_clock %><dt class="sr-only">Duration</dt><dd><%= @track.duration_clock %></dd><% end %>
-      <% if @track.language.present? %><dt class="sr-only">Language</dt><dd><%= @track.language %></dd><% end %>
-    </dl>
+      <dl class="meta-plain mt-6 flex flex-wrap gap-x-6 gap-y-2" data-reveal style="--reveal-delay: 60ms">
+        <% if @track.artist_name.present? %><div><dt class="sr-only">Artist</dt><dd><%= @track.artist_name %></dd></div><% end %>
+        <% if @track.bpm %><div><dt class="sr-only">Tempo</dt><dd><%= @track.bpm %> BPM</dd></div><% end %>
+        <% if @track.musical_key.present? %><div><dt class="sr-only">Key</dt><dd><%= @track.musical_key %></dd></div><% end %>
+        <% if @track.duration_clock %><div><dt class="sr-only">Duration</dt><dd><%= @track.duration_clock %></dd></div><% end %>
+        <% if @track.language.present? %><div><dt class="sr-only">Language</dt><dd><%= @track.language %></dd></div><% end %>
+        <% if @track.mood.present? %><div><dt class="sr-only">Mood</dt><dd><%= @track.mood %></dd></div><% end %>
+      </dl>
 
-    <% if @track.preview.attached? %>
-      <div class="mt-8">
-        <p class="label">Preview</p>
-        <audio controls preload="metadata" class="w-full" src="<%= track_preview_path(@track) %>">
-          <a href="<%= track_preview_path(@track) %>">Play the preview</a>
-        </audio>
-      </div>
-    <% end %>
+      <% if @track.preview.attached? %>
+        <div class="surface mt-10 flex flex-wrap items-center gap-5 p-5" data-reveal style="--reveal-delay: 100ms">
+          <button type="button"
+                  data-controller="track_row"
+                  data-track_row-id-value="<%= @track.id %>"
+                  data-track_row-url-value="<%= track_preview_path(@track) %>"
+                  data-track_row-title-value="<%= @track.title %>"
+                  data-track_row-subtitle-value="<%= @track.metadata_line %>"
+                  data-track_row-artwork-value="<%= @track.artwork.attached? ? url_for(@track.artwork) : "" %>"
+                  data-track_row-duration-value="<%= (@track.duration_ms || 0) / 1000 %>"
+                  data-track_row-downloadable-value="<%= @entitled %>"
+                  data-track_row-download-value="<%= @entitled ? track_downloads_path(@track) : "" %>"
+                  data-track_row-target="button"
+                  data-action="track_row#play"
+                  class="play"
+                  aria-pressed="false"
+                  aria-label="Play <%= @track.title %>">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" aria-hidden="true" fill="currentColor">
+              <path class="player-icon-play" d="M8 5.5v13l11-6.5-11-6.5Z" />
+              <path class="player-icon-pause hidden" d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" />
+            </svg>
+          </button>
 
-    <% if @track.lyrics.present? %>
-      <details class="mt-8">
-        <summary class="cursor-pointer font-display text-lg">Lyrics</summary>
-        <div class="measure mt-3 whitespace-pre-line text-sm text-ink-600"><%= @track.lyrics %></div>
-      </details>
-    <% end %>
+          <%# The full-width trace for this track. Flat until it is the one playing. %>
+          <canvas data-trace
+                  data-track-id="<%= @track.id %>"
+                  aria-hidden="true"
+                  class="h-12 min-w-0 flex-1"></canvas>
+        </div>
 
-    <% if @track.mood.present? %>
-      <p class="meta mt-8">Mood: <%= @track.mood %></p>
-    <% end %>
-  </div>
-
-  <aside class="card p-6">
-    <% if @track.artwork.attached? %>
-      <%= image_tag @track.artwork.variant(resize_to_fill: [ 480, 480 ]),
-        alt: "", class: "mb-5 w-full rounded-control object-cover", loading: "lazy" %>
-    <% end %>
-
-    <% if @entitled %>
-      <p class="font-display text-xl">Included in your subscription</p>
-      <p class="mt-2 text-sm text-ink-600">
-        Download the full-length master. The licence version in force is recorded with the download.
-      </p>
-      <%= button_to "Download master", track_downloads_path(@track), class: "btn btn-primary mt-4 w-full" %>
-      <p class="meta mt-3">
-        <%= link_to "Your downloads", account_downloads_path, class: "underline" %>
-      </p>
-    <% else %>
-      <p class="font-display text-xl">Subscribe to download</p>
-      <p class="mt-2 text-sm text-ink-600">
-        Preview freely. A subscription that includes <%= @track.genre.name %> unlocks the
-        full-length master and its licence record.
-      </p>
-      <ul class="mt-4 space-y-2 text-sm text-ink-600">
-        <li>Full-length 48 kHz FLAC, not a clip</li>
-        <li>Commercial licence, recorded when you download</li>
-        <li>Used in a client project? That is covered too</li>
-      </ul>
-      <%= link_to "See plans from $5", plans_path, class: "btn btn-primary mt-5 w-full" %>
-      <% if !user_signed_in? %>
-        <p class="meta mt-3">
-          <%= link_to "Sign in", new_user_session_path, class: "underline" %> if you already subscribe.
+        <% if @track.model_id.blank? %>
+          <p class="meta mt-3">
+            Synthesised placeholder preview - the generated master replaces it when this track is rendered.
+          </p>
+        <% end %>
+      <% else %>
+        <p class="surface mt-10 p-5 text-sm text-paper-dim">
+          This track has no preview yet. It appears here once a render finishes and an editor
+          listens to it.
         </p>
       <% end %>
-    <% end %>
-  </aside>
+
+      <% if @track.lyrics.present? %>
+        <details class="mt-10" data-reveal style="--reveal-delay: 140ms">
+          <summary class="cursor-pointer font-display text-xl">Lyrics</summary>
+          <div class="measure mt-4 whitespace-pre-line text-sm text-paper-dim"><%= @track.lyrics %></div>
+        </details>
+      <% end %>
+
+      <% if @track.abc_score.present? %>
+        <details class="mt-6">
+          <summary class="cursor-pointer font-display text-xl">Score</summary>
+          <p class="meta mt-2">YuE2's symbolic plan, recorded by the run that produced this track.</p>
+          <pre class="surface mt-4 overflow-x-auto p-4 text-xs text-paper-dim"><%= @track.abc_score %></pre>
+        </details>
+      <% end %>
+    </div>
+
+    <aside class="surface p-6" data-controller="tilt">
+      <% if @track.artwork.attached? %>
+        <%= image_tag @track.artwork, alt: "", width: 480, height: 480,
+          class: "vt-art mb-6 w-full rounded-[3px] object-cover", loading: "lazy" %>
+      <% else %>
+        <div class="vt-art mb-6 flex aspect-square w-full items-center justify-center rounded-[3px] border border-ink-700 bg-ink-950">
+          <span class="font-display text-6xl text-ink-600"><%= @track.genre.name.first %></span>
+        </div>
+      <% end %>
+
+      <% if @entitled %>
+        <p class="font-display text-xl">Included in your subscription</p>
+        <p class="mt-2 text-sm text-paper-dim">
+          Download the full-length master. The licence version in force is recorded with it.
+        </p>
+        <%= button_to "Download master", track_downloads_path(@track), class: "btn btn-primary mt-5 w-full" %>
+        <p class="meta mt-3"><%= link_to "Your downloads", account_downloads_path, class: "hover:text-accent" %></p>
+      <% else %>
+        <p class="font-display text-xl">Subscribe to download</p>
+        <p class="mt-2 text-sm text-paper-dim">
+          Preview freely. A subscription that includes <%= @track.genre.name %> unlocks the
+          full-length master and its licence record.
+        </p>
+        <ul class="mt-4 space-y-2 text-sm text-paper-dim">
+          <li>Full-length 48 kHz FLAC, not a clip</li>
+          <li>Commercial licence, recorded when you download</li>
+          <li>Client work is covered too</li>
+        </ul>
+        <%= link_to "See plans from $5", plans_path, class: "btn btn-primary mt-5 w-full" %>
+        <% if !user_signed_in? %>
+          <p class="meta mt-3">
+            <%= link_to "Sign in", new_user_session_path, class: "hover:text-accent" %> if you already subscribe.
+          </p>
+        <% end %>
+      <% end %>
+    </aside>
+  </div>
 </article>

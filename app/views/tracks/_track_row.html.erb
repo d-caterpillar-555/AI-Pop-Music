@@ -1,24 +1,52 @@
-<%# One row per track. `entitled` decides whether the download control is an
-    action or a prompt to subscribe - the same information the policy uses. %>
-<li id="<%= dom_id(track) %>" class="flex flex-wrap items-center gap-4 py-4">
-  <div class="min-w-0 flex-1">
-    <p class="font-display text-lg leading-tight">
-      <%= link_to track.title, track_path(track), class: "hover:underline" %>
+<%# One row in the catalogue, and a playable object.
+    The row owns no audio; it asks the one persistent player to play, and
+    reflects what the player reports. `entitled` decides whether the download is
+    an action or an invitation, which is the same question the policy answers. %>
+<% playable = track.preview.attached? %>
+<% artwork = track.artwork.attached? ? url_for(track.artwork) : nil %>
+
+<li data-controller="track_row"
+    data-track_row-id-value="<%= track.id %>"
+    data-track_row-url-value="<%= playable ? track_preview_path(track) : "" %>"
+    data-track_row-title-value="<%= track.title %>"
+    data-track_row-subtitle-value="<%= track.metadata_line %>"
+    data-track_row-artwork-value="<%= artwork %>"
+    data-track_row-duration-value="<%= (track.duration_ms || 0) / 1000 %>"
+    data-track_row-downloadable-value="<%= entitled %>"
+    data-track_row-download-value="<%= entitled ? track_downloads_path(track) : "" %>"
+    class="group grid grid-cols-[auto_auto_1fr_auto] items-center gap-3 border-b border-ink-800 px-2 py-4 transition-colors duration-300 hover:bg-ink-900/70 data-[playing=true]:bg-ink-900 sm:gap-5">
+
+  <button type="button"
+          data-track_row-target="button"
+          data-action="track_row#play"
+          class="play"
+          aria-pressed="false"
+          aria-label="<%= playable ? "Play #{track.title}" : "#{track.title} has no preview yet" %>"
+          <%= "disabled" unless playable %>>
+    <svg viewBox="0 0 24 24" class="h-4 w-4" aria-hidden="true" fill="currentColor">
+      <path class="player-icon-play" d="M8 5.5v13l11-6.5-11-6.5Z" />
+      <path class="player-icon-pause hidden" d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" />
+    </svg>
+  </button>
+
+  <%# The track's own trace: a flat resting line until this row is the one playing. %>
+  <canvas data-trace
+          data-track-id="<%= track.id %>"
+          aria-hidden="true"
+          class="hidden h-8 w-20 shrink-0 md:block lg:w-28"></canvas>
+
+  <div class="min-w-0">
+    <p class="truncate font-display text-lg leading-tight">
+      <%= link_to track.title, track_path(track), class: "hover:text-accent" %>
     </p>
-    <p class="meta mt-1 truncate"><%= track.metadata_line %></p>
+    <p class="meta-plain mt-1 truncate"><%= track.metadata_line %></p>
   </div>
 
-  <% if track.preview.attached? %>
-    <audio controls preload="none" class="h-9 w-56" src="<%= track_preview_path(track) %>">
-      <a href="<%= track_preview_path(track) %>">Play preview</a>
-    </audio>
-  <% else %>
-    <span class="meta">Preview pending</span>
-  <% end %>
-
   <% if entitled %>
-    <%= button_to "Download master", track_downloads_path(track), class: "btn btn-primary text-sm" %>
+    <%= button_to "Download", track_downloads_path(track), class: "btn btn-ghost text-sm" %>
+  <% elsif playable %>
+    <span class="meta hidden shrink-0 sm:inline">Subscribe to download</span>
   <% else %>
-    <%= link_to "Subscribe to download", plans_path, class: "btn btn-secondary text-sm" %>
+    <span class="meta shrink-0">Awaiting render</span>
   <% end %>
 </li>

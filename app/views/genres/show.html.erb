@@ -1,27 +1,29 @@
 <% page_title "#{@genre.name} tracks" %>
 <% page_description(@genre.description.presence || "Licensed #{@genre.name} tracks for creators. Preview free, download full 48 kHz masters with a subscription.") %>
 
-<section class="wrap">
-  <p class="meta uppercase"><%= link_to "Genres", genres_path, class: "underline" %></p>
+<section class="wrap pt-8">
+  <p class="meta"><%= link_to "Genres", genres_path, class: "hover:text-accent" %></p>
 
-  <div class="mt-4 grid gap-8 lg:grid-cols-[2fr_1fr] lg:items-start">
+  <div class="mt-6 grid gap-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,4fr)] lg:items-start" data-controller="reveal">
     <div>
-      <h1 class="text-4xl"><%= @genre.name %></h1>
+      <h1 class="display-1 max-w-[16ch]" data-reveal><%= @genre.name %></h1>
+
       <% if @genre.description.present? %>
-        <p class="measure mt-4 text-lg text-ink-600"><%= @genre.description %></p>
+        <p class="lede mt-6" data-reveal style="--reveal-delay: 60ms"><%= @genre.description %></p>
       <% end %>
-      <p class="meta mt-4">
-        <%= pluralize(@tracks.size, "published track") %> · preview any of them without an account
+
+      <p class="meta mt-6" data-reveal style="--reveal-delay: 100ms">
+        <%= pluralize(@tracks.size, "published track") %> · preview without an account
       </p>
     </div>
 
-    <aside class="card p-6">
+    <aside class="surface p-6" data-reveal style="--reveal-delay: 140ms">
       <p class="font-display text-xl">Unlock this genre</p>
-      <p class="mt-2 text-sm text-ink-600">
+      <p class="mt-2 text-sm text-paper-dim">
         A plan covers this genre plus the others you pick, with unlimited downloads of the
         full-length masters inside them.
       </p>
-      <ul class="mt-4 space-y-2 text-sm text-ink-600">
+      <ul class="mt-4 space-y-2 text-sm text-paper-dim">
         <li>48 kHz stereo FLAC, full length</li>
         <li>Commercial licence, recorded per download</li>
         <li>Cancel any time; published work stays licensed</li>
@@ -32,21 +34,21 @@
   </div>
 
   <% if @tracks.any? %>
-    <ul class="mt-12 divide-y divide-paper-100 border-y border-paper-100">
+    <ul class="mt-14 border-t border-ink-800">
       <% @tracks.each do |track| %>
         <%= render "tracks/track_row", track: track,
           entitled: (current_member ? current_member.can_download?(track) : false) %>
       <% end %>
     </ul>
 
-    <div class="card mt-10 flex flex-wrap items-center justify-between gap-6 p-6">
-      <p class="text-sm text-ink-600">
+    <div class="surface mt-10 flex flex-wrap items-center justify-between gap-6 p-6">
+      <p class="text-sm text-paper-dim">
         Heard something that fits? Subscribing to <%= @genre.name %> takes a minute.
       </p>
       <%= link_to "Subscribe to download", plans_path, class: "btn btn-primary" %>
     </div>
   <% else %>
-    <p class="mt-12 text-ink-600">
+    <p class="surface mt-14 p-6 text-paper-dim">
       No tracks in this genre yet. An editor publishes them as they are rendered and checked.
     </p>
   <% end %>

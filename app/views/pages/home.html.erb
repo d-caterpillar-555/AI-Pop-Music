@@ -1,151 +1,155 @@
 <% page_title "Music you are cleared to publish" %>
 <% page_description "Subscribe to a genre, download full-length 48 kHz masters, and keep a dated licence record for every file. AI Pop Music licenses AI-generated songs for commercial work." %>
 
-<section class="wrap">
-  <div class="grid gap-12 lg:grid-cols-[3fr_2fr] lg:items-start">
-    <div>
-      <p class="meta uppercase">Licensed catalogue</p>
+<section class="wrap pt-10" data-controller="reveal">
+  <p class="meta" data-reveal>Licensed catalogue · <%= @genres.size %> genres published</p>
 
-      <h1 class="mt-4 text-4xl sm:text-5xl">
-        Publish music you are cleared to use, without the licensing guesswork.
-      </h1>
+  <h1 class="display-1 mt-6 max-w-[18ch]" data-reveal style="--reveal-delay: 60ms">
+    Music you are cleared to publish.
+  </h1>
 
-      <p class="measure mt-6 text-lg text-ink-600">
-        Subscribe to the genres you work in. Download full-length 48 kHz masters, not loops
-        or 30-second clips. Every download records the licence version it was granted under,
-        so when a platform asks where your soundtrack came from, you have the answer.
-      </p>
+  <p class="lede mt-6" data-reveal style="--reveal-delay: 120ms">
+    Subscribe to the genres you work in. Download full-length 48 kHz masters, not loops.
+    Every download records the licence version it was granted under, so when a platform asks
+    where your soundtrack came from, you have the answer.
+  </p>
 
-      <div class="mt-8 flex flex-wrap items-center gap-3">
-        <%= link_to "Choose your genres", plans_path, class: "btn btn-primary" %>
-        <%= link_to "Hear the catalogue", genres_path, class: "btn btn-secondary" %>
-      </div>
-
-      <p class="meta mt-4">
-        From $5 a month. Cancel any time; downloads you already made stay licensed.
-      </p>
-    </div>
-
-    <%# Concrete facts, in place of the testimonials a new catalogue does not have. %>
-    <dl class="grid grid-cols-2 gap-x-6 gap-y-8 border-t border-paper-100 pt-8 lg:border-t-0 lg:pt-0">
-      <div>
-        <dt class="meta uppercase">Masters</dt>
-        <dd class="mt-1 text-sm text-ink-600">48 kHz stereo FLAC, full length</dd>
-      </div>
-      <div>
-        <dt class="meta uppercase">Downloads</dt>
-        <dd class="mt-1 text-sm text-ink-600">Unlimited inside your genres</dd>
-      </div>
-      <div>
-        <dt class="meta uppercase">Licence</dt>
-        <dd class="mt-1 text-sm text-ink-600">Commercial use, version recorded per download</dd>
-      </div>
-      <div>
-        <dt class="meta uppercase">Provenance</dt>
-        <dd class="mt-1 text-sm text-ink-600">Generated on our own hardware, model and seed kept</dd>
-      </div>
-    </dl>
+  <div class="mt-8 flex flex-wrap items-center gap-3" data-reveal style="--reveal-delay: 180ms">
+    <%= link_to "Choose your genres", plans_path, class: "btn btn-primary" %>
+    <%= link_to "Hear the catalogue", genres_path, class: "btn" %>
+    <span class="meta">From $5 a month · cancel any time</span>
   </div>
 </section>
 
-<section class="wrap mt-20">
-  <div class="measure">
-    <h2 class="text-2xl">The part that usually goes wrong</h2>
-    <p class="mt-3 text-ink-600">
-      "Royalty-free" usually means a licence you cannot check, a track someone else may also
-      have licensed to a hundred other channels, and no paperwork if a claim lands months
-      later. You end up choosing between music you cannot prove you are allowed to use and
-      music everyone has already heard.
-    </p>
-  </div>
+<% if @genres.any? %>
+  <section class="mt-16 border-y border-ink-800 py-5" aria-hidden="true">
+    <div class="marquee">
+      <div class="marquee-track gap-10">
+        <% 2.times do %>
+          <% @genres.each do |genre| %>
+            <span class="font-display text-3xl text-ink-400 whitespace-nowrap"><%= genre.name %></span>
+            <span class="text-accent">◆</span>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  </section>
+<% end %>
 
-  <div class="measure mt-8">
-    <h2 class="text-2xl">What you get instead</h2>
-    <ul class="mt-3 space-y-3 text-ink-600">
-      <li>
-        <strong class="text-ink-950">A licence you can produce.</strong>
+<% if @recent_tracks.any? %>
+  <section class="wrap mt-16" data-controller="reveal">
+    <div class="flex flex-wrap items-end justify-between gap-4" data-reveal>
+      <div>
+        <h2 class="display-2">Press play</h2>
+        <p class="lede mt-3 text-base">
+          The catalogue, playable right here. Previews are free and need no account.
+        </p>
+      </div>
+      <%= link_to "All genres", genres_path, class: "btn text-sm" %>
+    </div>
+
+    <ul class="mt-8 border-t border-ink-800" data-reveal style="--reveal-delay: 80ms">
+      <% @recent_tracks.each do |track| %>
+        <%= render "tracks/track_row", track: track,
+          entitled: (current_member ? current_member.can_download?(track) : false) %>
+      <% end %>
+    </ul>
+  </section>
+<% end %>
+
+<section class="wrap mt-20" data-controller="reveal">
+  <h2 class="display-2" data-reveal>The part that usually goes wrong</h2>
+
+  <div class="mt-8 grid gap-10 lg:grid-cols-3">
+    <div data-reveal style="--reveal-delay: 0ms">
+      <p class="meta">Vague licences</p>
+      <p class="mt-3 text-paper-dim">
+        "Royalty-free" usually means a licence you cannot check and no paperwork when a claim
+        lands months later. You end up choosing between music you cannot prove you may use and
+        music everyone has already heard.
+      </p>
+    </div>
+    <div data-reveal style="--reveal-delay: 80ms">
+      <p class="meta">Snippets, not songs</p>
+      <p class="mt-3 text-paper-dim">
+        Loops and 30-second beds fade out mid-sentence. Scoring anything longer than a reel
+        means stitching the same four bars together.
+      </p>
+    </div>
+    <div data-reveal style="--reveal-delay: 160ms">
+      <p class="meta">No provenance</p>
+      <p class="mt-3 text-paper-dim">
+        You cannot tell where the file came from, who else has it, or what model made it -
+        so you cannot answer a question about it later.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="wrap mt-20" data-controller="reveal">
+  <h2 class="display-2" data-reveal>What you get instead</h2>
+
+  <div class="mt-8 grid gap-6 lg:grid-cols-3">
+    <div class="surface surface-hover p-6" data-reveal>
+      <p class="meta">A licence you can produce</p>
+      <p class="mt-3 text-paper-dim">
         Every download writes a record against your account: which track, which terms, which
         day. It is the difference between "I think I am allowed to use this" and a dated entry
         you can send to a platform.
-      </li>
-      <li>
-        <strong class="text-ink-950">Songs, not snippets.</strong>
-        Full-length stereo masters you can score a whole piece with, edit, loop and mix into
-        your work, rather than a bed that fades out mid-sentence.
-      </li>
-      <li>
-        <strong class="text-ink-950">Music that fits the edit.</strong>
-        Genres are organised by what you are making, and every track page lists tempo, key,
-        duration and mood, so you can match the cut instead of auditioning blindly.
-      </li>
-    </ul>
+      </p>
+    </div>
+    <div class="surface surface-hover p-6" data-reveal style="--reveal-delay: 80ms">
+      <p class="meta">Songs, not snippets</p>
+      <p class="mt-3 text-paper-dim">
+        Full-length 48 kHz stereo masters you can score a whole piece with - edit, loop and mix
+        them into your work.
+      </p>
+    </div>
+    <div class="surface surface-hover p-6" data-reveal style="--reveal-delay: 160ms">
+      <p class="meta">Music that fits the edit</p>
+      <p class="mt-3 text-paper-dim">
+        Tempo, key, duration and mood sit on every track, so you match the cut instead of
+        auditioning blindly.
+      </p>
+    </div>
   </div>
 </section>
 
-<section class="wrap mt-20">
-  <h2 class="text-2xl">How it works</h2>
-  <ol class="mt-6 grid gap-6 sm:grid-cols-3">
-    <li class="card p-5">
-      <p class="meta uppercase">01</p>
-      <p class="mt-2 font-display text-lg">Pick a plan and your genres</p>
-      <p class="mt-2 text-sm text-ink-600">
-        A plan covers a number of genres. Change which ones whenever you like; the price stays
-        the same.
-      </p>
-    </li>
-    <li class="card p-5">
-      <p class="meta uppercase">02</p>
-      <p class="mt-2 font-display text-lg">Download what you need</p>
-      <p class="mt-2 text-sm text-ink-600">
-        Preview anything without an account. Subscribe and the masters unlock, with the licence
-        recorded as you take them.
-      </p>
-    </li>
-    <li class="card p-5">
-      <p class="meta uppercase">03</p>
-      <p class="mt-2 font-display text-lg">Publish and keep the record</p>
-      <p class="mt-2 text-sm text-ink-600">
-        Use the tracks in videos, podcasts, streams, games and client work. Your download
-        history stays as the proof.
-      </p>
-    </li>
+<section class="wrap mt-20" data-controller="reveal">
+  <h2 class="display-2" data-reveal>How it works</h2>
+
+  <ol class="mt-8 grid gap-6 lg:grid-cols-3">
+    <% [ [ "Pick a plan and your genres", "A plan covers a number of genres. Change which ones whenever you like; the price stays the same." ],
+         [ "Download what you need", "Preview anything without an account. Subscribe and the masters unlock, with the licence recorded as you take them." ],
+         [ "Publish and keep the record", "Use the tracks in videos, podcasts, streams, games and client work. Your download history stays as the proof." ] ].each_with_index do |(title, body), index| %>
+      <li class="surface p-6" data-reveal style="--reveal-delay: <%= index * 80 %>ms">
+        <p class="meta">0<%= index + 1 %></p>
+        <p class="mt-2 font-display text-xl"><%= title %></p>
+        <p class="mt-3 text-sm text-paper-dim"><%= body %></p>
+      </li>
+    <% end %>
   </ol>
 </section>
 
-<section class="wrap mt-20">
-  <div class="flex items-end justify-between gap-6">
-    <h2 class="text-2xl">Start with a genre</h2>
-    <%= link_to "All genres", genres_path, class: "text-sm underline" %>
-  </div>
+<% if @genres.any? %>
+  <section class="wrap mt-20" data-controller="reveal">
+    <div class="flex flex-wrap items-end justify-between gap-4" data-reveal>
+      <h2 class="display-2">Start with a genre</h2>
+      <%= link_to "All genres", genres_path, class: "btn text-sm" %>
+    </div>
 
-  <% if @genres.any? %>
-    <ul class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <% @genres.each do |genre| %>
-        <li>
-          <%= link_to genre_path(genre), class: "card block p-5 hover:border-ink-600" do %>
-            <p class="font-display text-xl"><%= genre.name %></p>
-            <p class="meta mt-2"><%= pluralize(genre.track_count, "track") %></p>
+    <ul class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <% @genres.each_with_index do |genre, index| %>
+        <li data-reveal style="--reveal-delay: <%= (index % 3) * 70 %>ms">
+          <%= link_to genre_path(genre), class: "surface surface-hover flex h-full flex-col p-6" do %>
+            <p class="font-display text-2xl"><%= genre.name %></p>
+            <p class="meta-plain mt-2"><%= pluralize(genre.track_count, "track") %></p>
             <% if genre.description.present? %>
-              <p class="mt-3 text-sm text-ink-600 line-clamp-2"><%= genre.description %></p>
+              <p class="mt-4 text-sm text-paper-dim"><%= genre.description %></p>
             <% end %>
+            <span class="meta mt-auto pt-6 text-accent">Open genre →</span>
           <% end %>
         </li>
-      <% end %>
-    </ul>
-  <% else %>
-    <p class="mt-6 text-ink-600">
-      The catalogue is being prepared. <%= link_to "See the plans", plans_path, class: "underline" %>
-      to be ready when tracks land.
-    </p>
-  <% end %>
-</section>
-
-<% if @recent_tracks.any? %>
-  <section class="wrap mt-20">
-    <h2 class="text-2xl">Recently added</h2>
-    <ul class="mt-6 divide-y divide-paper-100 border-y border-paper-100">
-      <% @recent_tracks.each do |track| %>
-        <%= render "tracks/track_row", track: track, entitled: false %>
       <% end %>
     </ul>
   </section>
@@ -164,19 +168,20 @@
     "licensed under the terms in force when you downloaded it, so a released project is not put at risk.",
   "Is this music unique to me?" =>
     "Every track is generated from a recorded prompt and seed, and that provenance is stored with the track. " \
-    "We do not resell the same master as a stock library item, and you are not competing with a hundred other " \
+    "We do not resell the same master as a stock library item, so you are not competing with a hundred other " \
     "channels using the identical file.",
   "Do I need to credit you?" =>
     "No. Attribution is welcome and is never a condition of the licence."
 } %>
 
-<section class="wrap mt-20">
-  <h2 class="text-2xl">Questions that decide it</h2>
-  <dl class="measure mt-6 divide-y divide-paper-100 border-y border-paper-100">
+<section class="wrap mt-20" data-controller="reveal">
+  <h2 class="display-2" data-reveal>Questions that decide it</h2>
+
+  <dl class="measure mt-8 border-t border-ink-800" data-reveal style="--reveal-delay: 60ms">
     <% faqs.each do |question, answer| %>
-      <div class="py-5">
+      <div class="border-b border-ink-800 py-5">
         <dt class="font-display text-lg"><%= question %></dt>
-        <dd class="mt-2 text-sm text-ink-600"><%= answer %></dd>
+        <dd class="mt-2 text-sm text-paper-dim"><%= answer %></dd>
       </div>
     <% end %>
   </dl>
@@ -185,16 +190,16 @@
 <%= structured_data(faq_structured_data(faqs)) %>
 
 <section class="wrap mt-20">
-  <div class="card flex flex-wrap items-center justify-between gap-6 p-8">
+  <div class="surface flex flex-wrap items-center justify-between gap-6 p-8">
     <div>
-      <h2 class="text-2xl">Find your genre, start today</h2>
-      <p class="mt-2 text-sm text-ink-600">
-        From $5 a month. Preview everything first - no account needed to listen.
+      <h2 class="display-2">Find your genre</h2>
+      <p class="mt-2 text-sm text-paper-dim">
+        From $5 a month. Preview everything first - listening needs no account.
       </p>
     </div>
     <div class="flex flex-wrap gap-3">
       <%= link_to "Choose your genres", plans_path, class: "btn btn-primary" %>
-      <%= link_to "Browse by genre", genres_path, class: "btn btn-secondary" %>
+      <%= link_to "Browse by genre", genres_path, class: "btn" %>
     </div>
   </div>
 </section>

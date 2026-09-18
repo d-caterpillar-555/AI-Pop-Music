@@ -109,10 +109,24 @@ demo_tracks.each do |genre_slug, tracks|
       position: index
     )
     track.save!
+
+    # A synthesised preview, so the player, the licence gate and the
+    # audio-reactive front end have real audio to work with before the first
+    # YuE2 render. It is not a song: the track page labels it, and the generated
+    # master replaces it.
+    next if track.preview.attached?
+
+    track.preview.attach(
+      io: StringIO.new(Catalogue::PreviewTone.wav_for(track)),
+      filename: "#{track.slug}-preview.wav",
+      content_type: "audio/x-wav"
+    )
   end
 end
-puts "  tracks: #{Track.count} published (metadata placeholders - no audio attached yet)"
+puts "  previews: #{Track.joins(:preview_attachment).count} synthesised placeholder previews attached"
+puts "  (each is labelled on its track page and replaced by the generated master)"
 
 puts
-puts "Note: seeded tracks carry no audio. Generate real tracks with a"
-puts "GenerationBatch in /admin once the YuE2 ComfyUI models have downloaded."
+puts "Note: seeded tracks are synthetic. Their previews are synthesised tones, not songs,"
+puts "and are labelled as such. Generate real tracks with a GenerationBatch in /admin"
+puts "once the YuE2 ComfyUI models have downloaded."

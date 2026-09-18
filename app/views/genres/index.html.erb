@@ -1,44 +1,39 @@
 <% page_title "Genres" %>
-<% page_description "Browse every genre in the AI Pop Music catalogue." %>
+<% page_description "Browse every genre in the AI Pop Music catalogue. Preview free, subscribe to download full-length masters." %>
 
-<section class="wrap">
-  <h1 class="text-3xl">Genres</h1>
-  <p class="measure mt-3 text-ink-600">
-    Each genre is a catalogue you subscribe to. Preview anything; download the ones you
-    are entitled to.
+<section class="wrap pt-10" data-controller="reveal">
+  <p class="meta" data-reveal>Catalogue</p>
+  <h1 class="display-1 mt-4 max-w-[16ch]" data-reveal style="--reveal-delay: 60ms">Pick the sound of your work.</h1>
+  <p class="lede mt-6" data-reveal style="--reveal-delay: 120ms">
+    Each genre is a catalogue you subscribe to. Preview anything without an account; the
+    masters unlock when your plan covers the genre.
   </p>
 
   <% if @genres.any? %>
-    <ul class="mt-10 grid gap-6 sm:grid-cols-2">
-      <% @genres.each do |genre| %>
-        <li class="card p-6">
-          <div class="flex items-start justify-between gap-4">
-            <div>
-              <%= link_to genre_path(genre), class: "font-display text-2xl hover:underline" do %>
-                <%= genre.name %>
-              <% end %>
-              <p class="meta mt-2"><%= pluralize(genre.track_count, "track") %></p>
+    <ul class="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <% @genres.each_with_index do |genre, index| %>
+        <li data-reveal style="--reveal-delay: <%= (index % 3) * 70 %>ms">
+          <%= link_to genre_path(genre), class: "surface surface-hover group flex h-full flex-col p-6" do %>
+            <div class="flex items-start justify-between gap-4">
+              <p class="font-display text-3xl"><%= genre.name %></p>
+              <span class="meta-plain shrink-0"><%= pluralize(genre.track_count, "track") %></span>
             </div>
-            <% if genre.artwork.attached? %>
-              <%= image_tag genre.artwork.variant(resize_to_fill: [ 96, 96 ]),
-                alt: "", class: "h-16 w-16 rounded-control object-cover", loading: "lazy" %>
+
+            <% if genre.description.present? %>
+              <p class="mt-4 text-sm text-paper-dim"><%= genre.description %></p>
             <% end %>
-          </div>
 
-          <% if genre.description.present? %>
-            <p class="mt-4 text-sm text-ink-600"><%= genre.description %></p>
+            <span class="meta mt-auto pt-8 text-accent opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+              Open genre →
+            </span>
           <% end %>
-
-          <div class="mt-5 flex items-center gap-3">
-            <%= link_to "Open genre", genre_path(genre), class: "btn btn-secondary text-sm" %>
-            <%= link_to "Subscribe", plans_path, class: "btn btn-ghost text-sm" %>
-          </div>
         </li>
       <% end %>
     </ul>
   <% else %>
-    <p class="mt-10 text-ink-600">
-      No genres are published yet. <%= link_to "See the plans", plans_path, class: "underline" %> to be ready when they land.
+    <p class="surface mt-14 p-6 text-paper-dim">
+      No genres are published yet. <%= link_to "See the plans", plans_path, class: "text-accent" %>
+      to be ready when tracks land.
     </p>
   <% end %>
 </section>
