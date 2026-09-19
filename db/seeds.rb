@@ -114,13 +114,21 @@ demo_tracks.each do |genre_slug, tracks|
     # audio-reactive front end have real audio to work with before the first
     # YuE2 render. It is not a song: the track page labels it, and the generated
     # master replaces it.
-    next if track.preview.attached?
+    if track.preview.attached?
+      # A track seeded before the peaks existed still needs its shape stored.
+      track.update!(peaks: Catalogue::Peaks.capture(track)) if track.peaks.blank?
+      next
+    end
 
     track.preview.attach(
       io: StringIO.new(Catalogue::PreviewTone.wav_for(track)),
       filename: "#{track.slug}-preview.wav",
       content_type: "audio/x-wav"
     )
+
+    # The stored shape of the audio, captured here rather than analysed in the
+    # browser, so the drawing exists before anything is played.
+    track.update!(peaks: Catalogue::Peaks.capture(track))
   end
 end
 puts "  previews: #{Track.joins(:preview_attachment).count} synthesised placeholder previews attached"

@@ -20,7 +20,7 @@ export default class extends Controller {
   ]
 
   connect() {
-    this.context = null
+    this.audioContext = null
     this.analyser = null
     this.source = null
     this.frequency = null
@@ -70,7 +70,7 @@ export default class extends Controller {
 
     if (!existing) return this.buildGraph()
 
-    this.context = existing.context
+    this.audioContext = existing.context
     this.analyser = existing.analyser
     this.source = existing.source
     this.frequency = new Uint8Array(this.analyser.frequencyBinCount)
@@ -244,18 +244,18 @@ export default class extends Controller {
     const Context = window.AudioContext || window.webkitAudioContext
     if (!Context) return
 
-    this.context = new Context()
-    this.source = this.context.createMediaElementSource(this.audio)
-    this.analyser = this.context.createAnalyser()
+    this.audioContext = new Context()
+    this.source = this.audioContext.createMediaElementSource(this.audio)
+    this.analyser = this.audioContext.createAnalyser()
     this.analyser.fftSize = 2048
     this.analyser.smoothingTimeConstant = 0.82
     this.frequency = new Uint8Array(this.analyser.frequencyBinCount)
 
     this.source.connect(this.analyser)
-    this.analyser.connect(this.context.destination)
+    this.analyser.connect(this.audioContext.destination)
 
     // Parked on the element, which outlives every controller instance.
-    this.audio.__apmGraph = { context: this.context, analyser: this.analyser, source: this.source }
+    this.audio.__apmGraph = { context: this.audioContext, analyser: this.analyser, source: this.source }
   }
 
   // --- Painting ------------------------------------------------------------

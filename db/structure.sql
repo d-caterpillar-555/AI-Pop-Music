@@ -782,6 +782,7 @@ CREATE TABLE public.tracks (
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
     discarded_at timestamp(6) without time zone,
+    peaks jsonb,
     CONSTRAINT tracks_bpm_sane CHECK (((bpm IS NULL) OR ((bpm >= 20) AND (bpm <= 400)))),
     CONSTRAINT tracks_duration_positive CHECK (((duration_ms IS NULL) OR (duration_ms > 0))),
     CONSTRAINT tracks_published_has_timestamp CHECK ((((status)::text <> 'published'::text) OR (published_at IS NOT NULL))),
@@ -1778,6 +1779,7 @@ ALTER TABLE ONLY public.orders
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20260919000001'),
 ('20260918180012'),
 ('20260918180011'),
 ('20260918180010'),

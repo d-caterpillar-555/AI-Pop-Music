@@ -1,5 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
-import ExplodedGuitar from "scenes/exploded_guitar"
+
 
 // Mounts the exploded guitar and wires the "take it apart" control to it.
 //
@@ -10,7 +10,8 @@ export default class extends Controller {
   static targets = [ "canvas", "slider", "readout" ]
   static values = { url: String }
 
-  connect() {
+  async connect() {
+    const { default: ExplodedGuitar } = await import("scenes/exploded_guitar")
     requestAnimationFrame(() => {
       this.scene = new ExplodedGuitar(this.canvasTarget, this.urlValue)
 

@@ -1,0 +1,31 @@
+#!/usr/bin/env ruby
+# Captures the stored waveform peaks for every published track.
+#
+# Run after a re-seed, or after the generator changes, or to backfill tracks
+# that predate the column. Idempotent: a track whose stored shape already
+# matches is left alone.
+
+require_relative "../config/environment"
+
+scope = Track.published.ordered
+updated = 0
+
+scope.find_each do |track|
+  peaks = Catalogue::Peaks.capture(track)
+
+  if peaks.empty?
+    puts "  #{track.slug}: no audio to measure, skipped"
+    next
+  end
+
+  if track.peaks == peaks
+    puts "  #{track.slug}: unchanged"
+    next
+  end
+
+  track.update!(peaks: peaks)
+  updated += 1
+  puts "  #{track.slug}: #{peaks.length} buckets, loudest #{peaks.max}"
+end
+
+puts "peaks: #{updated} of #{scope.count} tracks updated"

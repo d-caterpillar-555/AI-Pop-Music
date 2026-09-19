@@ -32,8 +32,13 @@ module Catalogue
     end
 
     def wav
-      samples = render
       header(samples.length) + samples.pack("s<*")
+    end
+
+    # The raw PCM, exposed so the peak capture reads the audio this writes
+    # rather than decoding it back out of the WAV container.
+    def samples
+      @samples ||= render
     end
 
     private

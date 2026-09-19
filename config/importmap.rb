@@ -20,3 +20,5 @@ pin "three" # @0.186.0
 # both files are pinned explicitly and vendored under matching paths.
 pin "three/addons/loaders/GLTFLoader.js", to: "three/addons/loaders/GLTFLoader.js"
 pin "three/addons/utils/BufferGeometryUtils.js", to: "three/addons/utils/BufferGeometryUtils.js"
+pin "three8080", to: "three.core.js"
+pin "three/addons/utils/SkeletonUtils.js", to: "three/addons/utils/SkeletonUtils.js"
