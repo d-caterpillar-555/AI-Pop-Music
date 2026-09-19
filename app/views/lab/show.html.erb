@@ -1,0 +1,68 @@
+<% page_title "Lab" %>
+<% page_description "Three motion pieces in progress: an exploded guitar, a band room, and an audio visualiser." %>
+
+<section class="wrap py-10">
+  <p class="meta">Workshop</p>
+  <h1 class="display-2 mt-4">Motion studies</h1>
+  <p class="lede mt-5">
+    Three pieces built from code rather than assets, so they ship with the
+    application and restyle with everything else.
+  </p>
+</section>
+
+<%# (a) The exploded guitar. %>
+<section class="wrap mt-6" data-controller="exploded_guitar reveal"
+         data-exploded_guitar-url-value="/models/exploded_guitar.glb">
+  <div class="flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <p class="meta">01</p>
+      <h2 class="display-2 mt-2">The guitar, apart</h2>
+      <p class="lede mt-3 text-base">
+        Every component on its own travel axis. Drag to take it apart and see what
+        actually sits under the guard - strings, poles, cavity cover, and the
+        hardware that holds it together.
+      </p>
+    </div>
+    <p class="meta" data-exploded_guitar-target="readout">Assembled</p>
+  </div>
+
+  <div class="surface mt-8 overflow-hidden">
+    <canvas data-exploded_guitar-target="canvas"
+            class="block h-[520px] w-full touch-none"
+            role="img"
+            aria-label="An electric guitar in three dimensions. Use the control below to separate its components."></canvas>
+
+    <div class="flex flex-wrap items-center gap-4 border-t border-ink-700 px-5 py-4">
+      <label for="explode" class="label mb-0 whitespace-nowrap">Take it apart</label>
+      <input id="explode"
+             type="range"
+             min="0"
+             max="100"
+             value="28"
+             step="1"
+             data-exploded_guitar-target="slider"
+             data-action="input->exploded_guitar#explode"
+             class="h-6 flex-1 min-w-48 accent-[var(--color-accent)]">
+      <span class="meta">drag to orbit</span>
+    </div>
+  </div>
+</section>
+
+<%# (b) and (c) are in progress; the slots are here so the comparison is honest. %>
+<section class="wrap mt-16 grid gap-6 lg:grid-cols-2">
+  <div class="surface p-6">
+    <p class="meta">02</p>
+    <h2 class="font-display text-2xl mt-2">The room</h2>
+    <p class="mt-3 text-sm text-paper-dim">
+      Nine instruments arranged in a rehearsal room, each one playable. In build.
+    </p>
+  </div>
+
+  <div class="surface p-6">
+    <p class="meta">03</p>
+    <h2 class="font-display text-2xl mt-2">The song, drawn</h2>
+    <p class="mt-3 text-sm text-paper-dim">
+      A track's own waveform and metadata rendered as a moving field. In build.
+    </p>
+  </div>
+</section>

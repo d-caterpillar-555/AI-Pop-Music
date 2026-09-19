@@ -66,6 +66,99 @@ motion studies. Everything below is committed and pushed to
 6. **No artwork anywhere**, and seeded tracks have no masters, so downloads end
    in "not available yet".
 
+## Photoreal guitar rebuild — state
+
+Plan: `~/.commandcode/plans/photoreal-guitar-explosion.md` (approved).
+Work: `script/blender/guitar/` in the project, working copies in
+`D:\Program Apps\AI Pop Music\Blender\`.
+
+**Milestone 1 is done; milestone 2 (materials) is partly done.**
+`script/blender/guitar/m1_silhouette.py` now renders a recognisable electric
+guitar: body from a spline outline (Catmull-Rom through 31 landmark points with a
+real neck pocket between two horns), bevel + light subsurf, tapered neck, radiused
+fretboard, bone nut, headstock with six tuners, pickguard, three pickups with pole
+pieces, bridge with six saddles and intonation screws, three knobs, jack plate,
+strap buttons, 22 frets placed by the rule of eighteen, and six strings at real
+gauges. Latest verified still: `Screenshots/14-guitar.png`.
+
+### The iteration loop that works
+
+Edit → copy to `D:\apm-shots\guitar\m1.py` → run Blender with **local** paths →
+confirm the PNG exists → copy into `Screenshots/` → **read the image**. Roughly
+1m50s per still at 128 samples, so batch several fixes per render; single-line
+tweaks are not worth a render cycle.
+
+### Fixes that mattered most, in order of impact
+
+1. **Cut the neck pocket out of the outline.** Filling it in produced a blob —
+   this was the single biggest reason it did not read as a guitar.
+2. **Bevel width must stay well under part thickness** (a 16 mm bevel on a 3 mm
+   plate bulged the guard into a cushion; 9 mm on the 44 mm body inflated it into
+   a pillow). Body is 4.5 mm, guard 6 mm.
+3. **Keep subsurf at 1** on the body, or the horns round off.
+4. **Add the hardware.** Guard, pickups, bridge, knobs and a headstock do more for
+   recognition than any amount of surface detail.
+5. **Don't over-stretch the wood noise.** `scale=(1, 46, 1)` at high detail made
+   fretboard grain look like a barcode. `(1, 12, 1)` at detail 6 reads as wood.
+6. **Compute camera distance from the bounding box** (`frame_camera`) instead of
+   guessing, and stop down to f/11. Guessing cropped the instrument twice.
+
+### What still looks wrong in 14-guitar.png
+
+- Headstock is too small and narrow for the neck; the tuner buttons read as
+  floating sticks rather than machines. Needs a wider paddle and proper
+  post/worm/button assembly with screws.
+- Fretboard too narrow relative to the maple neck, so the pale neck dominates.
+  The board should be the widest surface under the strings.
+- A concave notch on the treble-side waist is too deep and reads as a hook.
+- Strings are too thick and too bright; they should be near-invisible wire.
+- Pickups blend into the guard — the bobbins need to read black against cream.
+- Still no cavity, no neck pocket interior, no screws, no springs, no wiring, and
+  no edge wear. Those are the detail that sells realism at macro range.
+
+### Remaining for (a), then (b) and (c)
+
+Macro pass (rakes across grain, fret ends, wound strings), then the explode with
+the camera dollying *out*, then the 480-frame WebP sequence and home-page scrub.
+Then (b) the nine-instrument room and (c) the visualiser. Render cost remains the
+binding constraint — measure before committing to a frame count.
+
+### Hard numbers and gotchas learned here
+
+| Finding | Detail |
+|---|---|
+| **Render cost is the project's main constraint** | **3m32s for one 1600×900 still at 220 samples on CPU.** 480 frames at these settings is ~28 hours. Before rendering any sequence, cut samples to ~96 with denoise and drop to 960×540 (~30–40 s/frame ≈ 4–5 h), or find a way to get EEVEE a GL context. Measure the first frame before committing to a count. |
+| **Blender exits 0 even when the script raises** | A Python traceback still returns exit code 0 and writes no output file. **Never trust the exit code — assert the artifact exists.** This cost two silent failures. |
+| DOF attribute | `camera.data.dof.aperture_fstop`, not `aperture_fcs` (which does not exist in 4.5). |
+| View transform | `scene.view_settings.look` **raises** on an unrecognised name instead of falling back — wrap it in a try/except over candidate names. |
+| UNC paths | Still fatal and still silent. Copy the script local, run, move results. |
+
+### What is wrong with the current still (m1-body.png)
+
+1. **Blown out.** Big clipped-white region on the body; the red reads as pale pink.
+   The four area lights at 420/220/180/150 W plus a 0.75 world are far too hot.
+   Needs exposure set on `scene.view_settings.exposure` (negative) and lights
+   cut by roughly 3–4×.
+2. **Camera too close, again.** The body is cropped. Stop guessing distance —
+   compute it from the subject's bounding box (frame the Box3 corners), the same
+   way `three`'s `fitToBox` would.
+3. **f/4 is far too shallow** at this distance. Use the equivalent of f/8–f/11.
+
+### Still to do for (a)
+
+Full part count from the plan (~350–400 objects: 6 tuners × 8 pieces, 22 frets
+with dressed ends, 6 saddles + intonation screws + springs, 3 pickups × 6 pole
+pieces, 3 pots, 5-way switch, jack plate, cavity covers + screws, strap buttons).
+Then: HDRI environment, shadow-catcher floor, edge wear driven by pointiness, the
+macro + explode two-shot, then the 480-frame WebP sequence and the home-page
+scroll scrub. Then (b) and (c) with the same rig.
+
+### Suggested next action
+
+Fix exposure, camera framing (computed from bounding box) and DOF on
+`m1_silhouette.py`, re-render one still, and **look at it** before adding a single
+new part. The shape is right; the cinematography is what is failing.
+
 ## Next actions, in order
 
 1. Fix the player (1) — nothing visual matters until it plays.
