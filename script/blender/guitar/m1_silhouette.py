@@ -124,7 +124,7 @@ def smooth(obj, angle=38):
 # varies something - roughness, colour, or a bump - across the surface.
 
 
-def lacquer(name, color, roughness=0.10, peel_scale=260.0, peel=0.010, coat=1.0):
+def lacquer(name, color, roughness=0.10, peel_scale=260.0, peel=0.010, coat=0.5):
     mat = bpy.data.materials.new(name)
     mat.use_nodes = True
     nodes = mat.node_tree
@@ -136,7 +136,10 @@ def lacquer(name, color, roughness=0.10, peel_scale=260.0, peel=0.010, coat=1.0)
 
     if "Coat Weight" in bsdf.inputs:
         bsdf.inputs["Coat Weight"].default_value = coat
-        bsdf.inputs["Coat Roughness"].default_value = 0.03
+        # A near-mirror coat (0.03) spread a sheet of white specular right across
+        # the body and turned a deep red into pale pink. A coat that is slightly
+        # rough still reads as lacquer and lets the colour through.
+        bsdf.inputs["Coat Roughness"].default_value = 0.09
 
     # Orange peel: the fine unevenness in a sprayed finish. Without it a gloss
     # reads as moulded plastic.
@@ -255,6 +258,34 @@ def body(material):
     solidify.offset = 0.0
     apply_modifier(obj, "Solidify")
 
+    # Hollow it. A guitar body is a box, not a slab: from the LS16 exploded view,
+    # a top plate, a back plate and ribs, with air between them. Without the air
+    # a sound hole is only a hole - there is nothing inside it to resonate, which
+    # is exactly why the first version read as a hole drilled through plastic.
+    inner_ring = [(x * MM * 0.93, y * MM * 0.93) for x, y in ring]
+
+    cavity_mesh = bpy.data.meshes.new("Cavity")
+    cavity_mesh.from_pydata(
+        [(x, y, 0.0) for x, y in inner_ring], [], [list(range(len(inner_ring)))]
+    )
+    cavity_mesh.validate()
+
+    cavity = bpy.data.objects.new("Cavity", cavity_mesh)
+    bpy.context.collection.objects.link(cavity)
+
+    cavity_solid = cavity.modifiers.new("Solidify", "SOLIDIFY")
+    # 44 mm outside, 32 mm inside, so the plates end up 6 mm thick.
+    cavity_solid.thickness = 32 * MM
+    cavity_solid.offset = 0.0
+    apply_modifier(cavity, "Solidify")
+
+    hollow = obj.modifiers.new("Hollow", "BOOLEAN")
+    hollow.operation = "DIFFERENCE"
+    hollow.object = cavity
+    apply_modifier(obj, "Hollow")
+
+    bpy.data.objects.remove(cavity, do_unlink=True)
+
     # Every real edge has a radius. This is the single biggest reason the first
     # attempt looked like plastic.
     # A 9 mm bevel plus two subsurf levels inflated the body into a pillow and
@@ -274,6 +305,56 @@ def body(material):
     obj.data.materials.append(material)
     smooth(obj, 40)
     return obj
+
+
+def sound_hole(body_obj, radius_mm=52):
+    """Cut the aperture through the TOP PLATE only, where the guard used to be.
+
+    Two things were wrong before. It went through the whole instrument, top plate
+    and back plate both, which is not a sound hole, it is a puncture - a guitar's
+    back is solid. And it was placed off to one side to dodge the pickguard, when
+    the pickguard is not the thing that matters: the hole goes on the face, in
+    the upper bout, and the guard is what moves aside.
+
+    So the guard is removed and the hole takes its place, and the cutter is short
+    enough to bite the top plate and stop in the air behind it.
+    """
+    corners = [body_obj.matrix_world @ Vector(corner) for corner in body_obj.bound_box]
+    top = max(c.z for c in corners)
+    bottom = min(c.z for c in corners)
+    plate = (top - bottom) * 0.18
+
+    def centre_of(name):
+        obj = bpy.data.objects.get(name)
+        if not obj:
+            return None
+        corners = [obj.matrix_world @ Vector(corner) for corner in obj.bound_box]
+        return sum(corners, Vector()) / 8
+
+    # Where the guard sat, because that is where the hole was asked to go.
+    spot = centre_of("Pickguard") or centre_of("Body")
+
+    bpy.ops.mesh.primitive_cylinder_add(
+        radius=radius_mm * MM,
+        depth=plate * 2.4,
+        vertices=64,
+        location=(spot.x, spot.y, top - plate * 0.5),
+    )
+    cutter = bpy.context.active_object
+    cutter.name = "SoundHoleCutter"
+
+    boolean = body_obj.modifiers.new("SoundHole", "BOOLEAN")
+    boolean.operation = "DIFFERENCE"
+    boolean.object = cutter
+    apply_modifier(body_obj, "SoundHole")
+
+    bpy.data.objects.remove(cutter, do_unlink=True)
+
+    print(
+        f"SOUNDHOLE r={radius_mm}mm top-plate-only at "
+        f"{tuple(round(v, 3) for v in spot)} z={top - plate * 0.5:.3f}"
+    )
+    return body_obj
 
 
 def neck(material):
@@ -365,8 +446,8 @@ def ground():
     mat = bpy.data.materials.new("GroundMat")
     mat.use_nodes = True
     bsdf = mat.node_tree.nodes["Principled BSDF"]
-    bsdf.inputs["Base Color"].default_value = (0.30, 0.29, 0.28, 1.0)
-    bsdf.inputs["Roughness"].default_value = 0.62
+    bsdf.inputs["Base Color"].default_value = (0.055, 0.055, 0.062, 1.0)
+    bsdf.inputs["Roughness"].default_value = 0.48
     plane.data.materials.append(mat)
 
     plane.location = (0, 0.3, -0.024)
@@ -552,7 +633,12 @@ def headstock(mat, chrome_mat):
     modifier.segments = 4
     apply_modifier(head, "Bevel")
 
-    head.location = (0.0, 0.700, 0.020)
+    # The neck ends at y = 0.620 (0.150 + 0.470) and this was sitting at 0.700,
+    # which left a 37 mm air gap between the stick and the head. Static, at rest,
+    # before anything moves - the neck and the headstock were never joined in the
+    # first place. 0.658 puts the head's base at 0.615, a few millimetres inside
+    # the neck's end.
+    head.location = (0.0, 0.658, 0.020)
     # Pitched back a few degrees, the way a real one is.
     head.rotation_euler = (math.radians(-6), 0, 0)
     head.data.materials.append(mat)
@@ -563,9 +649,12 @@ def headstock(mat, chrome_mat):
     made.append(head)
 
     # Three tuners a side: post through the headstock, button on the outside.
+    # Absolute, so they move with the head above - 0.042 less than they were,
+    # or they would have hung off the end of a headstock that had moved under
+    # them.
     for side in (-1, 1):
         for index in range(3):
-            y = 0.662 + index * 0.028
+            y = 0.620 + index * 0.028
 
             bpy.ops.mesh.primitive_cylinder_add(radius=0.0034, depth=0.030, vertices=16)
             post = bpy.context.active_object
@@ -682,7 +771,7 @@ def grade():
         except TypeError:
             continue
 
-    scene.view_settings.exposure = 0.05
+    scene.view_settings.exposure = -0.15
 
     scene.use_nodes = True
     tree = scene.node_tree
@@ -771,8 +860,11 @@ def stage():
     scene.world = world
     world.use_nodes = True
     background = world.node_tree.nodes["Background"]
-    background.inputs[0].default_value = (0.42, 0.44, 0.48, 1.0)
-    background.inputs[1].default_value = 0.30
+    # A dark, cool room rather than a light grey one. The old 0.30 grey world put
+    # as much light on the instrument as the key did, so the sweep and the subject
+    # sat at the same value and the red had nowhere to go.
+    background.inputs[0].default_value = (0.055, 0.060, 0.075, 1.0)
+    background.inputs[1].default_value = 0.5
 
     def area(location, energy, size, color=(1, 1, 1)):
         bpy.ops.object.light_add(type="AREA", location=location)
@@ -785,11 +877,12 @@ def stage():
         return light
 
     # Energies cut hard from the first attempt (420/220/180/150 W), which blew
-    # the finish out to white and made a deep red read as pale pink.
-    area((1.5, 0.9, 1.9), 110, 2.2)
-    area((-1.8, -0.4, 1.1), 42, 2.6, (0.86, 0.90, 1.0))
-    area((0.2, -1.9, 1.5), 60, 1.8, (1.0, 0.94, 0.86))
-    area((-0.4, 1.8, 0.9), 48, 1.6, (1.0, 0.97, 0.92))
+    # the finish out to white and made a deep red read as pale pink. Trimmed
+    # again once the world stopped contributing a third of the light.
+    area((1.5, 0.9, 1.9), 90, 2.2)
+    area((-1.8, -0.4, 1.1), 34, 2.6, (0.86, 0.90, 1.0))
+    area((0.2, -1.9, 1.5), 50, 1.8, (1.0, 0.94, 0.86))
+    area((-0.4, 1.8, 0.9), 38, 1.6, (1.0, 0.97, 0.92))
 
     bpy.ops.object.camera_add(location=(0.62, -0.72, 0.44))
     camera = bpy.context.active_object
@@ -847,7 +940,159 @@ def render(path):
     print(f"STILL {path}")
 
 
+def bake_colour():
+    """Bake each material's procedural colour down to a bitmap.
+
+    This is the only way the grain survives the trip. A node graph cannot be
+    exported, so the choice is between a flat colour and a baked image, and a
+    maple neck with no figure in it is what makes a good mesh look like a toy.
+    Cycles does the evaluating here, once, and the exporter ships the pixels.
+    """
+    scene = bpy.context.scene
+    scene.render.engine = "CYCLES"
+    scene.cycles.device = "CPU"
+    scene.cycles.samples = 1
+
+    # Colour only: direct and indirect light would bake the studio's lighting
+    # into the instrument's own texture, and the browser lights it itself.
+    scene.render.bake.use_pass_direct = False
+    scene.render.bake.use_pass_indirect = False
+    scene.render.bake.use_pass_color = True
+    scene.render.bake.margin = 8
+
+    for mat in bpy.data.materials:
+        if not mat.use_nodes:
+            continue
+
+        bsdf = mat.node_tree.nodes.get("Principled BSDF")
+        if not bsdf:
+            continue
+
+        users = [
+            obj for obj in bpy.data.objects
+            if obj.type == "MESH" and any(slot.material == mat for slot in obj.material_slots)
+        ]
+        if not users:
+            continue
+
+        image = bpy.data.images.new(f"{mat.name}_baked", 1024, 1024)
+        node = mat.node_tree.nodes.new("ShaderNodeTexImage")
+        node.image = image
+        mat.node_tree.nodes.active = node
+        node.select = True
+
+        # Always unwrap, even when a UV layer is already there. Solidify and
+        # bevel generate one, and it is degenerate: every island collapsed to a
+        # point, so the bake writes a single texel and the whole surface samples
+        # black. Checking "has UVs?" is not the same as "has usable UVs".
+        for obj in users:
+            activate(obj)
+            bpy.ops.object.mode_set(mode="EDIT")
+            bpy.ops.mesh.select_all(action="SELECT")
+            bpy.ops.uv.smart_project(angle_limit=1.15, island_margin=0.02)
+            bpy.ops.object.mode_set(mode="OBJECT")
+
+        bpy.ops.object.select_all(action="DESELECT")
+        for obj in users:
+            obj.select_set(True)
+        bpy.context.view_layer.objects.active = users[0]
+
+        bpy.ops.object.bake(type="DIFFUSE")
+
+        for link in list(bsdf.inputs["Base Color"].links):
+            mat.node_tree.links.remove(link)
+        mat.node_tree.links.new(node.outputs["Color"], bsdf.inputs["Base Color"])
+
+        print(f"BAKED {mat.name} onto {len(users)} objects")
+
+
+def flatten_materials():
+    """Reduce every material to what glTF can actually carry.
+
+    The still render gets its wood from noise into a colour ramp, and its lacquer
+    from a coat layer. glTF carries none of that: a procedural graph arrives in
+    the browser unevaluated, so the neck and the board came out the colour of
+    paper while the body, which is a flat colour underneath, was fine.
+
+    Name-matched rather than read off the graph, because the graph is exactly
+    what cannot be exported.
+    """
+    tints = [
+        ("body", (0.52, 0.045, 0.035), 0.0, 0.28),
+        ("maple", (0.74, 0.55, 0.30), 0.0, 0.36),
+        ("rosewood", (0.14, 0.065, 0.05), 0.0, 0.50),
+        ("hardware", (0.72, 0.73, 0.76), 0.9, 0.22),
+        ("fret", (0.78, 0.79, 0.81), 0.9, 0.30),
+        ("string", (0.86, 0.86, 0.88), 1.0, 0.28),
+        ("bone", (0.93, 0.91, 0.84), 0.0, 0.45),
+        ("nut", (0.93, 0.91, 0.84), 0.0, 0.45),
+    ]
+
+    for mat in bpy.data.materials:
+        if not mat.use_nodes:
+            continue
+
+        bsdf = mat.node_tree.nodes.get("Principled BSDF")
+        if not bsdf:
+            continue
+
+        tint = next((entry for entry in tints if entry[0] in mat.name.lower()), None)
+        _colour, metallic, roughness = tint[1:] if tint else ((0.5, 0.5, 0.5), 0.0, 0.4)
+
+        # Base Color is deliberately untouched: it now carries a baked image,
+        # which is the one form of colour the exporter can actually ship. Only
+        # the scalars need pinning, and the normal input has to go because the
+        # bump graph feeding it is still a graph.
+        for socket in ("Metallic", "Roughness", "Normal"):
+            if socket in bsdf.inputs:
+                for link in list(bsdf.inputs[socket].links):
+                    mat.node_tree.links.remove(link)
+
+        bsdf.inputs["Metallic"].default_value = metallic
+        bsdf.inputs["Roughness"].default_value = roughness
+
+
+def export_glb(path, parts):
+    """The web scene wants the parts and nothing else.
+
+    No lights, no camera, no ground and no keyframes: the browser does its own
+    lighting and drives the explode from its own travel rules. What it needs is
+    the geometry, under names it can group by - body, pickguard, fret, string.
+
+    This exists because the GLB used to come from exploded_guitar.py, which
+    builds the instrument out of beveled cubes and cylinders. That is the boxy
+    model with no neck pocket, and no amount of lighting fixes a body that is a
+    rounded rectangle.
+    """
+    for obj in list(bpy.data.objects):
+        # The guard is dropped because the sound hole took its place. A solid
+        # body has a pickguard and no hole; an acoustic has a hole and no
+        # pickguard on the face. Keeping both is the hybrid that read wrong.
+        if obj.type in {"LIGHT", "CAMERA"} or obj.name in {"Ground", "Pickguard"}:
+            bpy.data.objects.remove(obj, do_unlink=True)
+
+    bake_colour()
+    flatten_materials()
+
+    if os.path.dirname(path):
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+
+    bpy.ops.export_scene.gltf(
+        filepath=path,
+        export_format="GLB",
+        export_apply=True,
+        export_animations=False,
+        use_selection=False,
+    )
+
+    print(f"GLB {path} parts={len(parts)}")
+
+
 def main():
+    argv = sys.argv
+    out = argv[argv.index("--") + 1] if "--" in argv else "D:/Program Apps/AI Pop Music/Blender/renders/m1-body.png"
+    exporting = out.endswith(".glb")
+
     clear()
 
     red = lacquer("BodyRed", (0.30, 0.030, 0.020), roughness=0.09)
@@ -860,21 +1105,26 @@ def main():
     chrome = metal("Hardware", (0.70, 0.71, 0.74), roughness=0.10)
     parts += headstock(maple, chrome)
     parts += hardware()
+
+    # After the guard exists, because the hole is placed to avoid it.
+    sound_hole(parts[0])
     parts += frets(metal("FretWire", (0.74, 0.75, 0.77), roughness=0.16))
     parts += strings(metal("StringSteel", (0.80, 0.80, 0.82), roughness=0.20))
 
     ground()
 
+    if exporting:
+        export_glb(out, parts)
+        return
+
     camera = stage()
     # Margin covers the exploded spread, not the assembled instrument - framing
-    # on the resting state let every part fly out of shot.
-    frame_camera(camera, parts, margin=1.55)
+    # on the resting state let every part fly out of shot. 1.25 then cropped the
+    # body's own corner, so this keeps a little air around the rest pose too.
+    frame_camera(camera, parts, margin=1.42)
 
     animate(parts)
     grade()
-
-    argv = sys.argv
-    out = argv[argv.index("--") + 1] if "--" in argv else "D:/apm-shots/m1-body.png"
 
     if out.endswith(".blend"):
         # Save the scene instead of a picture, so the rig can be inspected and

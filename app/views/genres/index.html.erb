@@ -1,13 +1,43 @@
 <% page_title "Genres" %>
 <% page_description "Browse every genre in the AI Pop Music catalogue. Preview free, subscribe to download full-length masters." %>
 
-<section class="wrap pt-10" data-controller="reveal">
-  <p class="meta" data-reveal>Catalogue</p>
-  <h1 class="display-1 mt-4 max-w-[16ch]" data-reveal style="--reveal-delay: 60ms">Pick the sound of your work.</h1>
-  <p class="lede mt-6" data-reveal style="--reveal-delay: 120ms">
-    Each genre is a catalogue you subscribe to. Preview anything without an account; the
-    masters unlock when your plan covers the genre.
-  </p>
+<section class="wrap pt-10" data-controller="reveal" data-variate-section="index-html">
+  <div class="grid gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-end">
+    <div>
+      <h1 class="display-1 max-w-[16ch]" data-reveal style="--reveal-delay: 60ms">Pick the sound of your work.</h1>
+
+      <p class="lede mt-6 max-w-[48ch]" data-reveal style="--reveal-delay: 120ms">
+        Each genre is a catalogue you subscribe to. Preview anything without an account; the
+        masters unlock when your plan covers the genre.
+      </p>
+    </div>
+
+    <ol class="grid gap-5 border-t border-ink-700 pt-6 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-8" data-reveal style="--reveal-delay: 180ms">
+      <li class="flex gap-4">
+        <span class="font-display text-2xl text-ink-400">1</span>
+        <div>
+          <p class="font-display text-lg">Pick a genre</p>
+          <p class="mt-1 text-sm text-paper-dim">Listen to the previews. They are free and need no account.</p>
+        </div>
+      </li>
+      <li class="flex gap-4">
+        <span class="font-display text-2xl text-ink-400">2</span>
+        <div>
+          <p class="font-display text-lg">Subscribe to it</p>
+          <p class="mt-1 text-sm text-paper-dim">Starter covers one genre, Pro three, Studio ten.</p>
+        </div>
+      </li>
+      <li class="flex gap-4">
+        <span class="font-display text-2xl text-ink-400">3</span>
+        <div>
+          <p class="font-display text-lg">Download the masters</p>
+          <p class="mt-1 text-sm text-paper-dim">
+            The licence version in force is recorded with every file you take.
+          </p>
+        </div>
+      </li>
+    </ol>
+  </div>
 
   <% if @genres.any? %>
     <ul class="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

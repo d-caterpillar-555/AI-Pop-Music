@@ -1,0 +1,21 @@
+<%# (a) The exploded guitar, as the page's background.
+
+    Fixed behind everything, with the page's own scroll as its progress: fully
+    assembled at the top, fully apart at the bottom. There is no panel, no
+    heading and no control, because this is the ground the page stands on rather
+    than a piece of furniture in it.
+
+    pointer-events-none so it never eats a click meant for the page, and -z-10 so
+    it paints above the root background but below every element of content.
+
+    The model goes through the asset pipeline so it is fingerprinted. In public/
+    it would be served at a fixed URL, so replacing it would be invisible and the
+    page would keep rendering the previous instrument. %>
+<div class="pointer-events-none fixed inset-0 -z-10"
+     data-controller="exploded-guitar"
+     data-exploded-guitar-url-value="<%= asset_path("exploded_guitar.glb") %>">
+  <canvas data-exploded-guitar-target="canvas"
+          class="block h-full w-full"
+          role="img"
+          aria-label="An electric guitar in three dimensions, behind the page. Scrolling takes it apart."></canvas>
+</div>

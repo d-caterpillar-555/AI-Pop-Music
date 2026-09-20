@@ -65,15 +65,28 @@ export default class extends Controller {
   // createMediaElementSource may only be called once per element, for that
   // element's whole lifetime - which now outlives this controller. The graph
   // therefore lives on the element and is adopted, never rebuilt.
+  //
+  // Adopting is ALL this does. It must not build the graph, because connecting
+  // happens outside a user gesture, and a context created there is born
+  // suspended - Chrome then routes the element through a graph that never
+  // reaches the destination and the track plays in silence. The graph is built
+  // in #play instead, which runs inside the click.
   adoptGraph() {
     const existing = this.audio.__apmGraph
 
-    if (!existing) return this.buildGraph()
+    if (!existing) return
 
     this.audioContext = existing.context
     this.analyser = existing.analyser
     this.source = existing.source
     this.frequency = new Uint8Array(this.analyser.frequencyBinCount)
+  }
+
+  // A context can be suspended for reasons outside our control (the tab was
+  // backgrounded, the OS changed audio device), so resuming is never assumed -
+  // it is asked for on every command that intends to make sound.
+  resumeContext() {
+    if (this.audioContext?.state === "suspended") this.audioContext.resume()
   }
 
   // THE trick that makes a persistent player work under Turbo.
@@ -166,8 +179,15 @@ export default class extends Controller {
   }
 
   visibility() {
-    if (document.hidden) this.stopFrame()
-    else if (this.playing) this.startFrame()
+    if (document.hidden) {
+      this.stopFrame()
+      return
+    }
+
+    if (!this.playing) return
+
+    this.resumeContext()
+    this.startFrame()
   }
 
   // Space toggles playback the way a player should, unless you are typing or
@@ -191,7 +211,12 @@ export default class extends Controller {
     this.current = track
     this.remember(track)
     this.audio.src = track.url
+
+    // Both of these belong here, inside the click that asked for sound: the
+    // graph cannot legally start anywhere else, and the context cannot leave
+    // "suspended" without a gesture behind it.
     this.buildGraph()
+    this.resumeContext()
 
     this.audio.play().catch(() => this.fail())
     this.setMediaSession()
@@ -199,8 +224,14 @@ export default class extends Controller {
 
   toggle() {
     if (!this.current) return
-    if (this.audio.paused) this.audio.play().catch(() => this.fail())
-    else this.audio.pause()
+
+    if (this.audio.paused) {
+      this.buildGraph()
+      this.resumeContext()
+      this.audio.play().catch(() => this.fail())
+    } else {
+      this.audio.pause()
+    }
   }
 
   seekTo(ratio) {

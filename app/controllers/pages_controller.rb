@@ -28,5 +28,8 @@ class PagesController < ApplicationController
     @genres = Genre.published.ordered.limit(6)
     @plans = Plan.active.ordered
     @recent_tracks = Track.published.ordered.limit(6).includes(:genre)
+
+    # No @tracks: the home page renders the guitar alone, and the waveform piece
+    # needs stored peaks. It is still on /lab, which loads its own.
   end
 end

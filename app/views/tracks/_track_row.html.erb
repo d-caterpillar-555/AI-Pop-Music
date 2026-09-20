@@ -5,20 +5,20 @@
 <% playable = track.preview.attached? %>
 <% artwork = track.artwork.attached? ? url_for(track.artwork) : nil %>
 
-<li data-controller="track_row"
-    data-track_row-id-value="<%= track.id %>"
-    data-track_row-url-value="<%= playable ? track_preview_path(track) : "" %>"
-    data-track_row-title-value="<%= track.title %>"
-    data-track_row-subtitle-value="<%= track.metadata_line %>"
-    data-track_row-artwork-value="<%= artwork %>"
-    data-track_row-duration-value="<%= (track.duration_ms || 0) / 1000 %>"
-    data-track_row-downloadable-value="<%= entitled %>"
-    data-track_row-download-value="<%= entitled ? track_downloads_path(track) : "" %>"
+<li data-controller="track-row"
+    data-track-row-id-value="<%= track.id %>"
+    data-track-row-url-value="<%= playable ? track_preview_path(track) : "" %>"
+    data-track-row-title-value="<%= track.title %>"
+    data-track-row-subtitle-value="<%= track.metadata_line %>"
+    data-track-row-artwork-value="<%= artwork %>"
+    data-track-row-duration-value="<%= (track.duration_ms || 0) / 1000 %>"
+    data-track-row-downloadable-value="<%= entitled %>"
+    data-track-row-download-value="<%= entitled ? track_downloads_path(track) : "" %>"
     class="group grid grid-cols-[auto_auto_1fr_auto] items-center gap-3 border-b border-ink-800 px-2 py-4 transition-colors duration-300 hover:bg-ink-900/70 data-[playing=true]:bg-ink-900 sm:gap-5">
 
   <button type="button"
-          data-track_row-target="button"
-          data-action="track_row#play"
+          data-track-row-target="button"
+          data-action="track-row#play"
           class="play"
           aria-pressed="false"
           aria-label="<%= playable ? "Play #{track.title}" : "#{track.title} has no preview yet" %>"

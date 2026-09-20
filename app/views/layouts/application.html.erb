@@ -17,21 +17,22 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
-    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%# The public site loads the app's own build only.
+        `stylesheet_link_tag :app` expands to EVERY stylesheet in the asset paths,
+        which silently pulled the 318 KB Avo admin bundle into every public page.
+        That bundle carries a bare `dl { display: grid; grid-template-columns:
+        max-content 1fr }` rule, which turned the FAQ description list into a
+        two-column grid and overflowed every answer out of its cell. Avo's own
+        layout loads `avo/application` itself, so the admin is unaffected. %>
+    <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
 
-    <%# The design direction is applied before first paint, so a returning
-        visitor never sees a flash of a different one. Inline and tiny on
-        purpose; everything else about the switcher lives in theme_controller.js. %>
+    <%# One direction, applied before first paint. The other two were removed: a
+        switcher that restyles the whole site is a demo, and it meant every token
+        had three meanings. Nothing reads localStorage here any more, so a
+        returning visitor with "signal" stored cannot get the old world back. %>
     <script>
-      (function () {
-        try {
-          var stored = window.localStorage.getItem("apm:theme");
-          document.documentElement.setAttribute("data-theme", stored || "signal");
-        } catch (error) {
-          document.documentElement.setAttribute("data-theme", "signal");
-        }
-      })();
+      document.documentElement.setAttribute("data-theme", "label");
     </script>
   </head>
 
@@ -182,22 +183,8 @@
       </div>
     </div>
 
-    <%# The direction switcher. Three complete design worlds share one codebase,
-        so a choice made here restyles every page instantly. %>
-    <div data-controller="theme" class="fixed bottom-4 left-4 z-50 print:hidden">
-      <div class="surface flex items-center gap-1 p-1" role="group" aria-label="Design direction">
-        <% [ [ "label", "Label" ], [ "signal", "Signal" ], [ "gallery", "Gallery" ] ].each do |key, name| %>
-          <button type="button"
-                  data-theme="<%= key %>"
-                  data-action="theme#select"
-                  data-theme-target="option"
-                  aria-pressed="false"
-                  class="px-3 py-1.5 text-xs font-medium uppercase tracking-wider transition-colors hover:text-accent aria-pressed:bg-accent aria-pressed:text-accent-ink">
-            <%= name %>
-          </button>
-        <% end %>
-      </div>
-      <p data-theme-target="live" aria-live="polite" class="sr-only"></p>
-    </div>
+  <%# variate:begin %>
+  <% if Rails.env.development? %><script src="http://127.0.0.1:4638/v.js"></script><% end %>
+  <%# variate:end %>
   </body>
 </html>

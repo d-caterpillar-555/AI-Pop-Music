@@ -57,6 +57,11 @@
   </section>
 <% end %>
 
+<%# The exploded guitar, as the page's background. Nothing else: the room and the
+    waveform piece are gone, and so is the /lab page that kept them. This renders
+    a fixed layer, so it adds no height and no section to the flow. %>
+<%= render "pages/guitar" %>
+
 <section class="wrap mt-20" data-controller="reveal">
   <h2 class="display-2" data-reveal>The part that usually goes wrong</h2>
 

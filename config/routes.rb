@@ -63,7 +63,6 @@ Rails.application.routes.draw do
   # --- Lab -------------------------------------------------------------------
   # The three motion pieces while they are being built. Not linked from the
   # public navigation.
-  get "/lab", to: "lab#show", as: :lab
 
   # --- Machine-readable ------------------------------------------------------
   get "/sitemap.xml", to: "sitemaps#show", as: :sitemap, defaults: { format: "xml" }
