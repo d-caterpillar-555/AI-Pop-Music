@@ -53,7 +53,7 @@ gem "simple_form", "~> 5.4"
 gem "active_storage_validations", "~> 4.1"
 
 # Email
-gem "resend", "~> 1.15"
+gem "resend", "~> 1.17"
 
 # Monitoring and audit
 gem "sentry-rails", "~> 7.0"
