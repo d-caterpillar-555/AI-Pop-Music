@@ -43,7 +43,7 @@ gem "avo", "~> 4.2"
 gem "meilisearch-rails", "~> 0.16.0"
 
 # Pagination and public URLs
-gem "pagy", "~> 43.6"
+gem "pagy", "~> 43.7"
 gem "friendly_id", "~> 5.7"
 
 # Forms
