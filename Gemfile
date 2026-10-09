@@ -37,7 +37,7 @@ gem "devise", "~> 5.0"
 gem "pundit", "~> 2.5"
 
 # Admin
-gem "avo", "~> 4.2"
+gem "avo", "~> 4.3"
 
 # Search
 gem "meilisearch-rails", "~> 0.16.0"
