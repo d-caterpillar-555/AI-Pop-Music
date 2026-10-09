@@ -56,7 +56,7 @@ gem "active_storage_validations", "~> 4.1"
 gem "resend", "~> 1.15"
 
 # Monitoring and audit
-gem "sentry-rails", "~> 7.0"
+gem "sentry-rails", "~> 7.1"
 gem "paper_trail", "~> 17.0"
 
 # Soft deletion
